@@ -151,6 +151,9 @@ class MainActivity : AppCompatActivity() {
                     Snackbar.make(this@MainActivity.findViewById(android.R.id.content), getString(R.string.logs_not_found), Snackbar.LENGTH_SHORT).show()
                 }
             }
+            binding.checkUpdatesIcon.setOnClickListener {
+                AppUpdater.checkForUpdates(context)
+            }
             binding.settingsIcon.setOnClickListener { settingsCallback.launch(Intent(context, SettingsActivity::class.java)) }
             binding.refreshIcon.setOnClickListener { loadRoms(false) }
             addTextChangedListener(afterTextChanged = { editable ->

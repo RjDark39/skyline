@@ -8,6 +8,7 @@
     <string name="settings">Settings</string>
     <string name="share_logs">Share Logs</string>
     <string name="refresh">Refresh</string>
+    <string name="check_updates">Check for updates</string>
     <!-- Toolbar - Share Logs -->
     <string name="log_share_prompt">Share log file</string>
     <string name="logs_not_found">No logs were created during the last run</string>

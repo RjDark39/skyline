@@ -18,6 +18,7 @@ android {
     compileSdk 33
 
     var isBuildSigned = (System.getenv("CI") == "true") && (System.getenv("IS_SKYLINE_SIGNED") == "true")
+    var gitCommitHash = 'git rev-parse --verify HEAD'.execute().text.trim()
 
     defaultConfig {
         applicationId "skyline.emu"
@@ -27,6 +28,8 @@ android {
 
         versionCode 3
         versionName "0.0.3"
+
+        buildConfigField("String", "GIT_HASH", "\"${gitCommitHash}\"")
 
         ndk {
             //noinspection ChromeOsAbiSupport
