@@ -14,10 +14,14 @@ import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.text.Html
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat.startActivity
+import com.google.android.material.badge.BadgeDrawable
+import com.google.android.material.badge.BadgeDrawable.BOTTOM_END
+import com.google.android.material.badge.BadgeUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -115,6 +119,37 @@ class AppUpdater : BroadcastReceiver() {
                                     dialogInterface.dismiss()
                                 }.show()
                         }
+                    }
+                } catch (e : IOException) {
+                    e.printStackTrace()
+                }
+            }
+        }
+
+        @JvmStatic
+        @com.google.android.material.badge.ExperimentalBadgeUtils
+        fun checkForUpdates2(context : Context, icon: ImageView) {
+            CoroutineScope(Dispatchers.IO).launch {
+            val url = URL("$baseUrl/builds")
+                try {
+                    val response = url.readText()
+                    val jsonBuilds = JSONTokener(response).nextValue() as JSONArray
+
+                    var ftx1Index = 0
+                    while (ftx1Index < jsonBuilds.length() && !jsonBuilds.getJSONObject(ftx1Index).get("branch").equals(branch)) {
+                        ftx1Index++
+                    }
+                    if (ftx1Index >= jsonBuilds.length())
+                        ftx1Index = 0
+
+                    val remoteBuildGitHash = jsonBuilds.getJSONObject(ftx1Index).getJSONObject("commit").getString("id")
+                    if(!BuildConfig.GIT_HASH.equals(remoteBuildGitHash)){
+                        val badge = BadgeDrawable.create(context)
+                        badge.badgeGravity = BOTTOM_END
+                        badge.verticalOffset = 25
+                        badge.horizontalOffset = 25
+                        badge.backgroundColor = context.getResources().getColor(R.color.colorPrimary)
+                        BadgeUtils.attachBadgeDrawable(badge, icon)
                     }
                 } catch (e : IOException) {
                     e.printStackTrace()

@@ -154,6 +154,7 @@ class MainActivity : AppCompatActivity() {
             if (BuildConfig.FLAVOR.equals("edge")) {
                 binding.checkUpdatesIcon.visibility = View.GONE
             } else {
+                AppUpdater.checkForUpdates2(context, binding.checkUpdatesIcon)
                 binding.checkUpdatesIcon.setOnClickListener {
                     AppUpdater.checkForUpdates(context)
                 }
