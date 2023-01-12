@@ -18,12 +18,14 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat.startActivity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONTokener
 import java.io.File
 import java.io.IOException
 import java.net.URL
-import java.util.concurrent.Executors
 
 class AppUpdater : BroadcastReceiver() {
     private var downloadID = 0L
@@ -43,7 +45,7 @@ class AppUpdater : BroadcastReceiver() {
         }
     }
 
-    fun downloadApk(applicationContext : Context, uri : Uri){
+    fun downloadApk(applicationContext : Context, uri : Uri) {
         val downloadPath = applicationContext.getPublicFilesDir().canonicalPath
         val file = File(downloadPath, "skyline.apk")
 
@@ -60,31 +62,31 @@ class AppUpdater : BroadcastReceiver() {
     }
 
     init {
-        if (File(SkylineApplication.instance.getPublicFilesDir().canonicalPath+"/skyline.apk").exists()) {
-            File(SkylineApplication.instance.getPublicFilesDir().canonicalPath+"/skyline.apk").delete()
+        if (File(SkylineApplication.instance.getPublicFilesDir().canonicalPath + "/skyline.apk").exists()) {
+            File(SkylineApplication.instance.getPublicFilesDir().canonicalPath + "/skyline.apk").delete()
         }
     }
 
     companion object {
         private const val baseUrl = "https://skyline-builds.alula.gay"
         private const val branch = "ftx1"
+
         @JvmStatic
         fun checkForUpdates(applicationContext : Context) {
-            val myExecutor = Executors.newSingleThreadExecutor()
             val myHandler = Handler(Looper.getMainLooper())
             val builder = AlertDialog.Builder(applicationContext)
 
             val url = URL("$baseUrl/builds")
-            myExecutor.execute {
+            CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val response = url.readText()
                     val jsonBuilds = JSONTokener(response).nextValue() as JSONArray
 
                     var ftx1Index = 0
-                    while(ftx1Index < jsonBuilds.length() && !jsonBuilds.getJSONObject(ftx1Index).get("branch").equals(branch)){
+                    while (ftx1Index < jsonBuilds.length() && !jsonBuilds.getJSONObject(ftx1Index).get("branch").equals(branch)) {
                         ftx1Index++
                     }
-                    if(ftx1Index >= jsonBuilds.length())
+                    if (ftx1Index >= jsonBuilds.length())
                         ftx1Index = 0
 
                     val remoteBuildGitHash = jsonBuilds.getJSONObject(ftx1Index).getJSONObject("commit").getString("id")
