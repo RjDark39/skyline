@@ -27,6 +27,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.json.JSONArray
+import org.json.JSONObject
 import org.json.JSONTokener
 import java.io.File
 import java.io.IOException
@@ -81,28 +82,18 @@ class AppUpdater : BroadcastReceiver() {
             val myHandler = Handler(Looper.getMainLooper())
             val builder = AlertDialog.Builder(applicationContext)
 
-            val url = URL("$baseUrl/builds")
             CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    val response = url.readText()
-                    val jsonBuilds = JSONTokener(response).nextValue() as JSONArray
-
-                    var ftx1Index = 0
-                    while (ftx1Index < jsonBuilds.length() && jsonBuilds.getJSONObject(ftx1Index).get("branch") != branch) {
-                        ftx1Index++
-                    }
-                    if (ftx1Index >= jsonBuilds.length())
-                        ftx1Index = 0
-
-                    val remoteBuildGitHash = jsonBuilds.getJSONObject(ftx1Index).getJSONObject("commit").getString("id")
+                val newestBuild = checkRemoteForUpdates()
+                if (newestBuild != null) {
+                    val remoteBuildGitHash = newestBuild.getJSONObject("commit").getString("id")
                     if (BuildConfig.GIT_HASH != remoteBuildGitHash) {
-                        val id = jsonBuilds.getJSONObject(ftx1Index).get("id")
-                        val apkName = jsonBuilds.getJSONObject(ftx1Index).get("apkName")
+                        val id = newestBuild.get("id")
+                        val apkName = newestBuild.get("apkName")
                         val uri = Uri.parse("$baseUrl/cache/${id}/${apkName}")
 
                         myHandler.post {
-                            builder.setTitle("New version ${jsonBuilds.getJSONObject(ftx1Index).get("runNumber")}")
-                                .setMessage(Html.fromHtml("<b>Changelog</b><p>${jsonBuilds.getJSONObject(ftx1Index).getJSONObject("commit").getString("message")}</p>", 0))
+                            builder.setTitle("New version ${newestBuild.get("runNumber")}")
+                                .setMessage(Html.fromHtml("<b>Changelog</b><p>${newestBuild.getJSONObject("commit").getString("message")}</p>", 0))
                                 .setCancelable(true)
                                 .setPositiveButton("Update") { dialogInterface, _ ->
                                     val receiver = AppUpdater()
@@ -114,37 +105,25 @@ class AppUpdater : BroadcastReceiver() {
                     } else {
                         myHandler.post {
                             builder.setTitle("No updates available")
-                                .setMessage(Html.fromHtml("<b>Changelog</b><p>${jsonBuilds.getJSONObject(ftx1Index).getJSONObject("commit").getString("message")}</p>", 0))
+                                .setMessage(Html.fromHtml("<b>Changelog</b><p>${newestBuild.getJSONObject("commit").getString("message")}</p>", 0))
                                 .setCancelable(true)
                                 .setPositiveButton("Close") { dialogInterface, _ ->
                                     dialogInterface.dismiss()
                                 }.show()
                         }
                     }
-                } catch (e : IOException) {
-                    e.printStackTrace()
                 }
             }
         }
 
         @JvmStatic
         @com.google.android.material.badge.ExperimentalBadgeUtils
-        fun checkForUpdates2(context : Context, icon: ImageView) {
+        fun notifyUpdateBadge(context : Context, icon : ImageView) {
             CoroutineScope(Dispatchers.IO).launch {
-                val url = URL("$baseUrl/builds")
-                try {
-                    val response = url.readText()
-                    val jsonBuilds = JSONTokener(response).nextValue() as JSONArray
-
-                    var ftx1Index = 0
-                    while (ftx1Index < jsonBuilds.length() && jsonBuilds.getJSONObject(ftx1Index).get("branch") != branch) {
-                        ftx1Index++
-                    }
-                    if (ftx1Index >= jsonBuilds.length())
-                        ftx1Index = 0
-
-                    val remoteBuildGitHash = jsonBuilds.getJSONObject(ftx1Index).getJSONObject("commit").getString("id")
-                    if(BuildConfig.GIT_HASH != remoteBuildGitHash){
+                val newestBuild = checkRemoteForUpdates()
+                if (newestBuild != null) {
+                    val remoteBuildGitHash = newestBuild.getJSONObject("commit").getString("id")
+                    if (BuildConfig.GIT_HASH != remoteBuildGitHash) {
                         val badge = BadgeDrawable.create(context)
                         badge.badgeGravity = BOTTOM_END
                         badge.verticalOffset = 25
@@ -152,9 +131,28 @@ class AppUpdater : BroadcastReceiver() {
                         badge.backgroundColor = ContextCompat.getColor(context, R.color.colorPrimary)
                         BadgeUtils.attachBadgeDrawable(badge, icon)
                     }
-                } catch (e : IOException) {
-                    e.printStackTrace()
                 }
+            }
+        }
+
+        @JvmStatic
+        fun checkRemoteForUpdates() : JSONObject? {
+            val url = URL("$baseUrl/builds")
+            try {
+                val response = url.readText()
+                val jsonBuilds = JSONTokener(response).nextValue() as JSONArray
+
+                var ftx1Index = 0
+                while (ftx1Index < jsonBuilds.length() && jsonBuilds.getJSONObject(ftx1Index).get("branch") != branch) {
+                    ftx1Index++
+                }
+                if (ftx1Index >= jsonBuilds.length())
+                    ftx1Index = 0
+
+                return jsonBuilds.getJSONObject(ftx1Index)
+            } catch (e : IOException) {
+                e.printStackTrace()
+                return null
             }
         }
     }
