@@ -151,7 +151,7 @@ class MainActivity : AppCompatActivity() {
                     Snackbar.make(this@MainActivity.findViewById(android.R.id.content), getString(R.string.logs_not_found), Snackbar.LENGTH_SHORT).show()
                 }
             }
-            if (BuildConfig.FLAVOR.equals("edge")) {
+            if (BuildConfig.FLAVOR == "edge") {
                 binding.checkUpdatesIcon.visibility = View.GONE
             } else {
                 AppUpdater.checkForUpdates2(context, binding.checkUpdatesIcon)
