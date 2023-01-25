@@ -77,7 +77,7 @@ class AppUpdater : BroadcastReceiver() {
         private const val baseUrl = "https://skyline-builds.alula.gay"
         private const val branch = "ftx1"
 
-        @JvmStatic
+
         fun checkForUpdates(applicationContext : Context) {
             val myHandler = Handler(Looper.getMainLooper())
             val builder = AlertDialog.Builder(applicationContext)
@@ -91,9 +91,13 @@ class AppUpdater : BroadcastReceiver() {
                         val apkName = newestBuild.get("apkName")
                         val uri = Uri.parse("$baseUrl/cache/${id}/${apkName}")
 
+                        var changelog = "<b>Changelog</b><p>${newestBuild.getJSONObject("commit").getString("message").substringBefore("\n")}</p>"
+                        if (newestBuild.getJSONObject("commit").getString("message").contains("\n"))
+                            changelog += "<p>${newestBuild.getJSONObject("commit").getString("message").substringAfter("\n")}</p>"
+
                         myHandler.post {
                             builder.setTitle("New version ${newestBuild.get("runNumber")}")
-                                .setMessage(Html.fromHtml("<b>Changelog</b><p>${newestBuild.getJSONObject("commit").getString("message")}</p>", 0))
+                                .setMessage(Html.fromHtml(changelog, 0))
                                 .setCancelable(true)
                                 .setPositiveButton("Update") { dialogInterface, _ ->
                                     val receiver = AppUpdater()
@@ -116,7 +120,7 @@ class AppUpdater : BroadcastReceiver() {
             }
         }
 
-        @JvmStatic
+
         @com.google.android.material.badge.ExperimentalBadgeUtils
         fun notifyUpdateBadge(context : Context, icon : ImageView) {
             CoroutineScope(Dispatchers.IO).launch {
@@ -135,7 +139,7 @@ class AppUpdater : BroadcastReceiver() {
             }
         }
 
-        @JvmStatic
+
         fun checkRemoteForUpdates() : JSONObject? {
             val url = URL("$baseUrl/builds")
             try {
