@@ -66,12 +66,6 @@ class AppUpdater : BroadcastReceiver() {
         downloadID = downloadManager.enqueue(request)
     }
 
-    init {
-        if (File(SkylineApplication.instance.getPublicFilesDir().canonicalPath + "/skyline.apk").exists()) {
-            File(SkylineApplication.instance.getPublicFilesDir().canonicalPath + "/skyline.apk").delete()
-        }
-    }
-
     companion object {
         private const val baseUrl = "https://skyline-builds.alula.gay"
         private const val branch = "ftx1"
@@ -156,6 +150,12 @@ class AppUpdater : BroadcastReceiver() {
             } catch (e : IOException) {
                 e.printStackTrace()
                 return null
+            }
+        }
+
+        fun removeApk(){
+            if (File(SkylineApplication.instance.getPublicFilesDir().canonicalPath + "/skyline.apk").exists()) {
+                File(SkylineApplication.instance.getPublicFilesDir().canonicalPath + "/skyline.apk").delete()
             }
         }
     }
