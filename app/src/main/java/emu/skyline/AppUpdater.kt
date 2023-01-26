@@ -40,7 +40,7 @@ class AppUpdater : BroadcastReceiver() {
         val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
         //Checking if the received broadcast is for our enqueued download by matching download id
         if (downloadID == id) {
-            Toast.makeText(context, "Download Completed", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.download_completed), Toast.LENGTH_SHORT).show()
 
             val intentInstall = Intent(Intent.ACTION_INSTALL_PACKAGE)
             intentInstall.data = (context.getSystemService(AppCompatActivity.DOWNLOAD_SERVICE) as DownloadManager).getUriForDownloadedFile(downloadID)

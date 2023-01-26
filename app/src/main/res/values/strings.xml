@@ -16,6 +16,7 @@
     <string name="new_version">New version</string>
     <string name="changelog">Changelog</string>
     <string name="update">Update</string>
+    <string name="download_completed">Download completed</string>
     <string name="no_updates_available">No updates available</string>
     <string name="close">Close</string>
     <!-- Main -->
