@@ -11,8 +11,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
-import android.os.Handler
-import android.os.Looper
 import android.text.Html
 import android.widget.ImageView
 import android.widget.Toast
@@ -26,6 +24,7 @@ import com.google.android.material.badge.BadgeUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import org.json.JSONTokener
@@ -77,41 +76,43 @@ class AppUpdater : BroadcastReceiver() {
         private const val baseUrl = "https://skyline-builds.alula.gay"
         private const val branch = "ftx1"
 
-
         fun checkForUpdates(applicationContext : Context) {
-            val myHandler = Handler(Looper.getMainLooper())
             val builder = AlertDialog.Builder(applicationContext)
 
             CoroutineScope(Dispatchers.IO).launch {
                 val newestBuild = checkRemoteForUpdates()
                 if (newestBuild != null) {
-                    val remoteBuildGitHash = newestBuild.getJSONObject("commit").getString("id")
+                    val commit = newestBuild.getJSONObject("commit")
+                    val remoteBuildGitHash = commit.getString("id")
                     if (BuildConfig.GIT_HASH != remoteBuildGitHash) {
                         val id = newestBuild.get("id")
                         val apkName = newestBuild.get("apkName")
                         val uri = Uri.parse("$baseUrl/cache/${id}/${apkName}")
 
-                        var changelog = "<b>Changelog</b><p>${newestBuild.getJSONObject("commit").getString("message").substringBefore("\n")}</p>"
-                        if (newestBuild.getJSONObject("commit").getString("message").contains("\n"))
-                            changelog += "<p>${newestBuild.getJSONObject("commit").getString("message").substringAfter("\n")}</p>"
+                        val message = commit.getString("message")
+                        var changelog = "<b>${applicationContext.getString(R.string.changelog)}</b><p>${message.substringBefore("\n")}</p>"
+                        if (message.contains("\n"))
+                            changelog += "<p>${message.substringAfter("\n")}</p>"
 
-                        myHandler.post {
-                            builder.setTitle("New version ${newestBuild.get("runNumber")}")
+                        withContext(Dispatchers.Main) {
+                            builder.setTitle("${applicationContext.getString(R.string.new_version)} ${newestBuild.get("runNumber")}")
                                 .setMessage(Html.fromHtml(changelog, 0))
                                 .setCancelable(true)
-                                .setPositiveButton("Update") { dialogInterface, _ ->
+                                .setPositiveButton(applicationContext.getString(R.string.update)) { dialogInterface, _ ->
                                     val receiver = AppUpdater()
                                     applicationContext.registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
                                     receiver.downloadApk(applicationContext, uri)
                                     dialogInterface.dismiss()
+                                }.setNegativeButton(applicationContext.getString(R.string.cancel)){ dialogInterface, _ ->
+                                    dialogInterface.cancel()
                                 }.show()
                         }
                     } else {
-                        myHandler.post {
-                            builder.setTitle("No updates available")
-                                .setMessage(Html.fromHtml("<b>Changelog</b><p>${newestBuild.getJSONObject("commit").getString("message")}</p>", 0))
+                        withContext(Dispatchers.Main) {
+                            builder.setTitle(applicationContext.getString(R.string.no_updates_available))
+                                .setMessage(Html.fromHtml("<b>${applicationContext.getString(R.string.changelog)}</b><p>${commit.getString("message")}</p>", 0))
                                 .setCancelable(true)
-                                .setPositiveButton("Close") { dialogInterface, _ ->
+                                .setPositiveButton(applicationContext.getString(R.string.close)) { dialogInterface, _ ->
                                     dialogInterface.dismiss()
                                 }.show()
                         }
@@ -119,7 +120,6 @@ class AppUpdater : BroadcastReceiver() {
                 }
             }
         }
-
 
         @com.google.android.material.badge.ExperimentalBadgeUtils
         fun notifyUpdateBadge(context : Context, icon : ImageView) {
@@ -139,8 +139,7 @@ class AppUpdater : BroadcastReceiver() {
             }
         }
 
-
-        fun checkRemoteForUpdates() : JSONObject? {
+        private fun checkRemoteForUpdates() : JSONObject? {
             val url = URL("$baseUrl/builds")
             try {
                 val response = url.readText()

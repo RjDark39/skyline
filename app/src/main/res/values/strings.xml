@@ -12,6 +12,12 @@
     <!-- Toolbar - Share Logs -->
     <string name="log_share_prompt">Share log file</string>
     <string name="logs_not_found">No logs were created during the last run</string>
+    <!-- Updater -->
+    <string name="new_version">New version</string>
+    <string name="changelog">Changelog</string>
+    <string name="update">Update</string>
+    <string name="no_updates_available">No updates available</string>
+    <string name="close">Close</string>
     <!-- Main -->
     <string name="all">All</string>
     <string name="metadata_missing">Metadata Missing</string>
