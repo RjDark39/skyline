@@ -30,9 +30,7 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.getSystemService
-import androidx.core.view.isGone
-import androidx.core.view.isInvisible
-import androidx.core.view.updateMargins
+import androidx.core.view.*
 import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -289,17 +287,6 @@ class EmulationActivity : AppCompatActivity(), SurfaceHolder.Callback, View.OnTo
             getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // Android might not allow child views to overlap the system bars
-            // Override this behavior and force content to extend into the cutout area
-            window.setDecorFitsSystemWindows(false)
-
-            window.insetsController?.let {
-                it.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                it.hide(WindowInsets.Type.systemBars())
-            }
-        }
-
         if (emulationSettings.respectDisplayCutout) {
             binding.perfStats.setOnApplyWindowInsetsListener(insetsOrMarginHandler)
             binding.onScreenControllerToggle.setOnApplyWindowInsetsListener(insetsOrMarginHandler)
@@ -423,14 +410,13 @@ class EmulationActivity : AppCompatActivity(), SurfaceHolder.Callback, View.OnTo
 
         GpuDriverHelper.forceMaxGpuClocks(emulationSettings.forceMaxGpuClocks)
 
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
-            @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    or View.SYSTEM_UI_FLAG_FULLSCREEN)
+        // Android might not allow child views to overlap the system bars
+        // Override this behavior and force content to extend into the cutout area
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        WindowInsetsControllerCompat(window, window.decorView).let { controller ->
+            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.hide(WindowInsetsCompat.Type.systemBars())
         }
     }
 
