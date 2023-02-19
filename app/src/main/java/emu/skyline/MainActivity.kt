@@ -151,15 +151,6 @@ class MainActivity : AppCompatActivity() {
                     Snackbar.make(this@MainActivity.findViewById(android.R.id.content), getString(R.string.logs_not_found), Snackbar.LENGTH_SHORT).show()
                 }
             }
-            if (BuildConfig.FLAVOR == "edge") {
-                binding.checkUpdatesIcon.visibility = View.GONE
-            } else {
-                AppUpdater.removeApk()
-                AppUpdater.notifyUpdateBadge(context, binding.checkUpdatesIcon)
-                binding.checkUpdatesIcon.setOnClickListener {
-                    AppUpdater.checkForUpdates(context)
-                }
-            }
             binding.settingsIcon.setOnClickListener { settingsCallback.launch(Intent(context, SettingsActivity::class.java)) }
             binding.refreshIcon.setOnClickListener { loadRoms(false) }
             addTextChangedListener(afterTextChanged = { editable ->
@@ -333,6 +324,18 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
+
+        binding.checkUpdatesIcon.apply {
+            if (BuildConfig.FLAVOR == "edge") {
+                visibility = View.GONE
+            } else {
+                AppUpdater.removeApk()
+                AppUpdater.notifyUpdateBadge(context, this)
+                this.setOnClickListener {
+                    AppUpdater.checkForUpdates(context)
+                }
+            }
+        }
     }
 
     override fun onResume() {
