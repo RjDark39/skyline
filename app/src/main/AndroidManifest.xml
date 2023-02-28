@@ -12,6 +12,10 @@
         android:required="true"
         android:version="0x401000" />
 
+    <queries>
+        <package android:name="${applicationId}" />
+    </queries>
+
     <application
         android:name=".SkylineApplication"
         android:enableOnBackInvokedCallback="true"
@@ -21,6 +25,7 @@
         android:hasFragileUserData="${shouldSaveUserData}"
         android:icon="@drawable/logo_skyline"
         android:isGame="true"
+        android:largeHeap="true"
         android:label="${appLabel}"
         android:localeConfig="@xml/locales_config"
         android:supportsRtl="true"
@@ -108,6 +113,10 @@
                     tools:ignore="IntentFilterUniqueDataAttributes" />
             </intent-filter>
         </activity>
+
+        <receiver
+            android:name=".update.UpdateReceiver"
+            android:exported="true" />
 
         <provider
             android:name=".provider.DocumentsProvider"

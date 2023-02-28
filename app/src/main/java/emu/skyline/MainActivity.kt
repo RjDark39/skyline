@@ -36,6 +36,7 @@ import emu.skyline.provider.DocumentsProvider
 import emu.skyline.settings.AppSettings
 import emu.skyline.settings.EmulationSettings
 import emu.skyline.settings.SettingsActivity
+import emu.skyline.update.UpdateManager
 import emu.skyline.utils.GpuDriverHelper
 import emu.skyline.utils.WindowInsetsHelper
 import javax.inject.Inject
@@ -88,6 +89,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun AppItem.toViewItem() = AppViewItem(layoutType, this, ::selectStartGame, ::selectShowGameDialog)
 
+    @com.google.android.material.badge.ExperimentalBadgeUtils
     override fun onCreate(savedInstanceState : Bundle?) {
         // Need to create new instance of settings, dependency injection happens
         AppCompatDelegate.setDefaultNightMode(
@@ -279,6 +281,7 @@ class MainActivity : AppCompatActivity() {
         adapter.setItems(items)
     }
 
+    @com.google.android.material.badge.ExperimentalBadgeUtils
     override fun onStart() {
         super.onStart()
 
@@ -294,6 +297,14 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
+
+        if (BuildConfig.FLAVOR == "bit") {
+            UpdateManager.applyUpdateBadge(binding.checkUpdatesIcon)
+            binding.checkUpdatesIcon.setOnClickListener {
+                UpdateManager.requestUpdateManager(this, activityResultRegistry)
+            }
+            return
+        }
 
         binding.checkUpdatesIcon.apply {
             if (BuildConfig.FLAVOR == "edge") {

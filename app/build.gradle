@@ -124,6 +124,32 @@ android {
             versionNameSuffix = "-dev"
             manifestPlaceholders += [appLabel: "Skyline Dev"]
         }
+
+        bit {
+            dimension = "version"
+            applicationIdSuffix = ".eightbit"
+            versionNameSuffix = "-eightbit"
+            manifestPlaceholders.appLabel = "Skyline (8-bit)"
+            manifestPlaceholders.shouldSaveUserData = "true"
+            manifestPlaceholders.emulationProcess = ":emulationProcess"
+            project.archivesBaseName = "skyline-${gitCommitHash.substring(0, 7)}"
+
+            try {
+                def keystoreProps = new Properties()
+                keystoreProps.load(new FileInputStream(rootProject.file("cmd/keystore.properties")))
+                signingConfigs {
+                    document {
+                        keyAlias keystoreProps['keyAlias']
+                        keyPassword keystoreProps['keyPassword']
+                        storeFile file(keystoreProps['storeFile'])
+                        storePassword keystoreProps['storePassword']
+                    }
+                }
+                buildTypes.release.signingConfig signingConfigs.document
+                buildTypes.reldebug.signingConfig signingConfigs.document
+                buildTypes.debug.signingConfig signingConfigs.document
+            } catch (FileNotFoundException ignored) { }
+        }
     }
 
     buildFeatures {
