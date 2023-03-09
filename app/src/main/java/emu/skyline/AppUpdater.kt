@@ -10,6 +10,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
 import android.net.Uri
 import android.text.Html
 import android.widget.ImageView
@@ -18,9 +19,11 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.startActivity
+import androidx.core.content.res.use
 import com.google.android.material.badge.BadgeDrawable
 import com.google.android.material.badge.BadgeDrawable.BOTTOM_END
 import com.google.android.material.badge.BadgeUtils
+import com.google.android.material.color.DynamicColors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -126,7 +129,7 @@ class AppUpdater : BroadcastReceiver() {
                         badge.badgeGravity = BOTTOM_END
                         badge.verticalOffset = 25
                         badge.horizontalOffset = 25
-                        badge.backgroundColor = ContextCompat.getColor(context, R.color.colorPrimary)
+                        badge.backgroundColor = context.obtainStyledAttributes(intArrayOf(R.attr.colorPrimary)).use { it.getColor(0, Color.GREEN) }
                         BadgeUtils.attachBadgeDrawable(badge, icon)
                     }
                 }
