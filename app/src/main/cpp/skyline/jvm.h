@@ -219,9 +219,7 @@ namespace skyline {
         jmethodID waitForSubmitOrCancelId;
         jmethodID closeKeyboardId;
         jmethodID showValidationResultId;
-        jmethodID getVersionCodeId;
         jmethodID getDhcpInfoId;
-
         jmethodID getIntegerValueId;
 
         jmethodID showPipelineLoadingScreenId;
