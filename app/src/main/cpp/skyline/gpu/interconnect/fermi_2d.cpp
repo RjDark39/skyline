@@ -2,18 +2,20 @@
 // Copyright © 2022 Ryujinx Team and Contributors (https://github.com/ryujinx/)
 // Copyright © 2022 Skyline Team and Contributors (https://github.com/skyline-emu/)
 
-#include <gpu/texture/format.h>
+#include <gpu/texture/formats.h>
 #include <gpu/texture/texture.h>
 #include <gpu/texture_manager.h>
 #include <soc/gm20b/gmmu.h>
 #include <soc/gm20b/channel.h>
+#include <vulkan/vulkan_enums.hpp>
 #include "fermi_2d.h"
+#include "gpu/texture/guest_texture.h"
 
 namespace skyline::gpu::interconnect {
     using IOVA = soc::gm20b::IOVA;
     using MemoryLayout = skyline::soc::gm20b::engine::fermi2d::type::MemoryLayout;
 
-    std::pair<gpu::GuestTexture, bool> Fermi2D::GetGuestTexture(const Surface &surface, u32 oobReadStart, u32 oobReadWidth) {
+    std::pair<Fermi2D::FermiTexture, bool> Fermi2D::GetFermiTexture(const Surface &surface, u32 oobReadStart, u32 oobReadWidth) {
         auto determineFormat = [&](Surface::SurfaceFormat format) -> skyline::gpu::texture::Format {
             #define FORMAT_CASE(fermiFmt, skFmt, fmtType) \
                 case Surface::SurfaceFormat::fermiFmt ## fmtType: \
@@ -76,41 +78,41 @@ namespace skyline::gpu::interconnect {
             #undef FORMAT_SAME_CASE
         };
 
-        GuestTexture texture{};
-
-        texture.format = determineFormat(surface.format);
-        texture.aspect = texture.format->vkAspect;
-        texture.baseArrayLayer = 0;
-        texture.layerCount = 1;
-        texture.viewType = vk::ImageViewType::e2D;
+        texture::Format format{determineFormat(surface.format)};
+        texture::Dimensions dimensions{};
+        texture::TileConfig tileConfig{};
 
 
         u64 addressOffset{};
-        if (surface.memoryLayout == MemoryLayout::Pitch) {
-            texture.dimensions = gpu::texture::Dimensions{surface.stride / texture.format->bpb, surface.height, 1};
-
+        if (surface.memoryLayout == MemoryLayout::Pitch) {        
             // OpenGL games rely on reads wrapping around to the next line when reading out of bounds, emulate this behaviour by offsetting the address
             if (oobReadStart && surface.width == (oobReadWidth + oobReadStart) && (oobReadWidth + oobReadStart) > texture.dimensions.width)
                 addressOffset += oobReadStart * texture.format->bpb;
 
             texture.tileConfig = gpu::texture::TileConfig{
+            dimensions = gpu::texture::Dimensions{surface.stride / format->bpb, surface.height, 1};
+            tileConfig = gpu::texture::TileConfig{
                 .mode = gpu::texture::TileMode::Pitch,
                 .pitch = surface.stride
             };
         } else {
-            texture.dimensions = gpu::texture::Dimensions{surface.width, surface.height, surface.depth};
-            texture.tileConfig = gpu::texture::TileConfig{
+            dimensions = gpu::texture::Dimensions{surface.width, surface.height, surface.depth};
+            tileConfig = gpu::texture::TileConfig{
                 .mode = gpu::texture::TileMode::Block,
                 .blockHeight = surface.blockSize.Height(),
                 .blockDepth = surface.blockSize.Depth(),
             };
         }
 
-        u64 iova{u64{surface.address} + addressOffset};
-        auto mappings{channelCtx.asCtx->gmmu.TranslateRange(iova, texture.GetSize())};
-        texture.mappings.assign(mappings.begin(), mappings.end());
 
-        return {texture, addressOffset != 0};
+		u32 layerStride{texture::CalculateLayerStride(dimensions, format, tileConfig, 1, 1)};
+        return {FermiTexture{
+            .format = format,
+            .dimensions = dimensions,
+            .tileConfig = tileConfig,
+            .mappings = texture::Mappings{channelCtx.asCtx->gmmu.TranslateRange(u64{surface.address} + addressOffset, layerStride)},
+            .layerStride = layerStride,
+        }, addressOffset != 0};
     }
 
     Fermi2D::Fermi2D(GPU &gpu, soc::gm20b::ChannelContext &channelCtx)
@@ -129,19 +131,21 @@ namespace skyline::gpu::interconnect {
         u32 oobReadWidth{static_cast<u32>(duDx * static_cast<float>(dstRectWidth))};
 
         // TODO: When we support MSAA perform a resolve operation rather than blit when the `resolve` flag is set.
-        auto [srcGuestTexture, srcWentOob]{GetGuestTexture(srcSurface, oobReadStart, oobReadWidth)};
-        if (srcWentOob)
+        auto [srcFermiTexture, srcWentOob]{GetFermiTexture(srcSurface, oobReadStart, oobReadWidth)};
+        auto [dstFermiTexture, srcWentOob]{GetFermiTexture(dstSurface)};
+		
+		if (srcWentOob)
             centredSrcRectX = 0.0f;
 
-        auto [dstGuestTexture, dstWentOob]{GetGuestTexture(dstSurface)};
-        auto srcTextureView{gpu.texture.FindOrCreate(srcGuestTexture, executor.tag)};
-        executor.AttachDependency(srcTextureView);
-        executor.AttachTexture(srcTextureView.get());
+        auto srcTextureView{gpu.texture.FindOrCreate([=](auto &&executionCallback) {
+            executor.AddOutsideRpCommand(std::forward<decltype(executionCallback)>(executionCallback));
+        }, executor.tag, srcFermiTexture.mappings, srcFermiTexture.dimensions, {}, {}, srcFermiTexture.format, vk::ImageViewType::e2D, {}, srcFermiTexture.tileConfig, 1, 1, srcFermiTexture.layerStride)};
+        executor.AttachTexture(srcTextureView);
 
-        auto dstTextureView{gpu.texture.FindOrCreate(dstGuestTexture, executor.tag)};
-        executor.AttachDependency(dstTextureView);
-        executor.AttachTexture(dstTextureView.get());
-        dstTextureView->texture->MarkGpuDirty(executor.usageTracker);
+        auto dstTextureView{gpu.texture.FindOrCreate([=](auto &&executionCallback) {
+            executor.AddOutsideRpCommand(std::forward<decltype(executionCallback)>(executionCallback));
+        }, executor.tag, dstFermiTexture.mappings, dstFermiTexture.dimensions, {}, {}, dstFermiTexture.format, vk::ImageViewType::e2D, {}, dstFermiTexture.tileConfig, 1, 1, dstFermiTexture.layerStride)};
+        executor.AttachTexture(dstTextureView);
 
         executor.AddCheckpoint("Before blit");
         gpu.helperShaders.blitHelperShader.Blit(
@@ -158,15 +162,15 @@ namespace skyline::gpu::interconnect {
                 .x = static_cast<float>(dstRectX),
                 .y = static_cast<float>(dstRectY),
             },
-            srcGuestTexture.dimensions, dstGuestTexture.dimensions,
+            srcFermiTexture.dimensions, dstFermiTexture.dimensions,
             duDx, dvDy,
             filter == SampleModeFilter::Bilinear,
-            srcTextureView.get(), dstTextureView.get(),
+            srcTextureView, dstTextureView,
             [=](auto &&executionCallback) {
-                auto dst{dstTextureView.get()};
-                std::array<TextureView *, 1> sampledImages{srcTextureView.get()};
-                executor.AddSubpass(std::move(executionCallback), {{static_cast<i32>(dstRectX), static_cast<i32>(dstRectY)}, {dstRectWidth, dstRectHeight} },
-                                    sampledImages, {}, {dst}, {}, false,
+                auto dst{dstTextureView};
+                std::array<HostTextureView *, 1> sampledImages{srcTextureView};
+                executor.AddSubpass(std::forward<decltype(executionCallback)>(executionCallback), {{static_cast<i32>(dstRectX), static_cast<i32>(dstRectY)}, {dstRectWidth, dstRectHeight}},
+                                    sampledImages, {dst}, {},
                                     vk::PipelineStageFlagBits::eAllGraphics, vk::PipelineStageFlagBits::eAllGraphics);
             }
         );

@@ -224,12 +224,12 @@ namespace skyline::gpu::interconnect::maxwell3d {
         auto clearRects{util::MakeFilledArray<vk::ClearRect, 2>(vk::ClearRect{.rect = scissor, .baseArrayLayer = clearSurface.rtArrayIndex, .layerCount = 1})};
         boost::container::small_vector<vk::ClearAttachment, 2> clearAttachments;
 
-        std::shared_ptr<TextureView> colorView{};
-        std::shared_ptr<TextureView> depthStencilView{};
+        HostTextureView *colorView{};
+        HostTextureView *depthStencilView{};
 
         if (clearSurface.rEnable || clearSurface.gEnable || clearSurface.bEnable || clearSurface.aEnable) {
             if (auto view{activeState.GetColorRenderTargetForClear(ctx, clearSurface.mrtSelect)}) {
-                ctx.executor.AttachTexture(&*view);
+                ctx.executor.AttachTexture(view);
 
                 bool partialClear{!(clearSurface.rEnable && clearSurface.gEnable && clearSurface.bEnable && clearSurface.aEnable)};
                 if (!(view->range.aspectMask & vk::ImageAspectFlagBits::eColor))
@@ -243,22 +243,20 @@ namespace skyline::gpu::interconnect::maxwell3d {
                                                                   (clearSurface.bEnable ? vk::ColorComponentFlagBits::eB : vk::ColorComponentFlags{}) |
                                                                   (clearSurface.aEnable ? vk::ColorComponentFlagBits::eA : vk::ColorComponentFlags{}),
                                                                   {clearEngineRegisters.colorClearValue}, &*view, [=](auto &&executionCallback) {
-                        auto dst{view.get()};
-                        ctx.executor.AddSubpass(std::move(executionCallback), renderArea, {}, {}, span<TextureView *>{dst}, nullptr);
+                        auto dst{view};
+                        ctx.executor.AddSubpass(std::move(executionCallback), renderArea, {}, {dst}, nullptr);
                     });
                     ctx.executor.NotifyPipelineChange();
-                } else if (needsAttachmentClearCmd(view)) {
+                } else {
                     clearAttachments.push_back({.aspectMask = view->range.aspectMask, .clearValue = {clearEngineRegisters.colorClearValue}});
                     colorView = view;
-                } else {
-                    ctx.executor.AddClearColorSubpass(&*view, clearEngineRegisters.colorClearValue);
                 }
             }
         }
 
         if (clearSurface.stencilEnable || clearSurface.zEnable) {
             if (auto view{activeState.GetDepthRenderTargetForClear(ctx)}) {
-                ctx.executor.AttachTexture(&*view);
+                ctx.executor.AttachTexture(view);
 
                 bool viewHasDepth{view->range.aspectMask & vk::ImageAspectFlagBits::eDepth}, viewHasStencil{view->range.aspectMask & vk::ImageAspectFlagBits::eStencil};
                 vk::ImageAspectFlags clearAspectMask{(clearSurface.zEnable ? vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlags{}) |
@@ -275,11 +273,12 @@ namespace skyline::gpu::interconnect::maxwell3d {
                     return;
                 }
 
-                if (needsAttachmentClearCmd(view) || (clearAspectMask != view->range.aspectMask)) { // Subpass clears write to all aspects of the texture, so we can't use them when only one component is enabled
-                    clearAttachments.push_back({.aspectMask = clearAspectMask, .clearValue = clearValue});
+
+                if ((!clearSurface.stencilEnable && viewHasStencil) || (!clearSurface.zEnable && viewHasDepth)) { // Subpass clears write to all aspects of the texture, so we can't use them when only one component is enabled
+                    clearAttachments.push_back({.aspectMask = view->range.aspectMask, .clearValue = clearValue});
                     depthStencilView = view;
                 } else {
-                    ctx.executor.AddClearDepthStencilSubpass(&*view, clearValue);
+                    ctx.executor.AddClearDepthStencilSubpass(view, clearValue);
                 }
             }
         }
@@ -292,6 +291,10 @@ namespace skyline::gpu::interconnect::maxwell3d {
         }
 
         ctx.executor.AddCheckpoint("After clear");
+        std::array<HostTextureView *, 1> colorAttachments{colorView ? &*colorView : nullptr};
+        ctx.executor.AddSubpass([clearAttachments, clearRects](vk::raii::CommandBuffer &commandBuffer, const std::shared_ptr<FenceCycle> &, GPU &) {
+            commandBuffer.clearAttachments(clearAttachments, span(clearRects).first(clearAttachments.size()));
+        }, renderArea, {}, colorView ? colorAttachments : span<HostTextureView *>{}, depthStencilView);
     }
 
     void Maxwell3D::Draw(engine::DrawTopology topology, bool transformFeedbackEnable, bool indexed, u32 count, u32 first, u32 instanceCount, u32 vertexOffset, u32 firstInstance) {
@@ -335,10 +338,20 @@ namespace skyline::gpu::interconnect::maxwell3d {
 
         vk::Rect2D scissor{GetDrawScissor()};
 
+        ctx.executor.AddCheckpoint("Before draw");
+        auto colorAttachments{activeState.GetColorAttachments()};
+        auto depthStencilAttachment{activeState.GetDepthAttachment()};
+        auto depthStencilAttachmentSpan{depthStencilAttachment ? span<HostTextureView *>(depthStencilAttachment) : span<HostTextureView *>()};
+        for (auto attachment : ranges::views::concat(colorAttachments, depthStencilAttachmentSpan)) {
+            if (attachment) {
+                scissor.extent.width = std::min(scissor.extent.width, static_cast<u32>(static_cast<i32>(attachment->hostTexture->dimensions.width) - scissor.offset.x));
+                scissor.extent.height = std::min(scissor.extent.height, static_cast<u32>(static_cast<i32>(attachment->hostTexture->dimensions.height) - scissor.offset.y));
+            }
+        }
 
         constantBuffers.ResetQuickBind();
-        ctx.executor.AddCheckpoint("Before draw");
-        ctx.executor.AddSubpass([drawParams](vk::raii::CommandBuffer &commandBuffer, const std::shared_ptr<FenceCycle> &, GPU &gpu, vk::RenderPass, u32) {
+
+        ctx.executor.AddSubpass([drawParams](vk::raii::CommandBuffer &commandBuffer, const std::shared_ptr<FenceCycle> &, GPU &gpu) {
             drawParams->stateUpdater.RecordAll(gpu, commandBuffer);
 
             if (drawParams->transformFeedbackEnable)
