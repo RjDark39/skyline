@@ -185,6 +185,21 @@ namespace skyline {
         KeyboardCloseResult ShowValidationResult(KeyboardHandle dialog, KeyboardTextCheckResult checkResult, std::u16string message);
 
         /**
+         * @brief A call to EmulationActivity.showPipelineLoadingScreen in Kotlin
+         */
+        void ShowPipelineLoadingScreen(u32 totalPipelineCount);
+
+        /**
+         * @brief A call to EmulationActivity.updatePipelineLoadingProgress in Kotlin
+         */
+        void UpdatePipelineLoadingProgress(u32 progress);
+
+        /**
+         * @brief A call to EmulationActivity.hidePipelineLoadingScreen in Kotlin
+         */
+        void HidePipelineLoadingScreen();
+
+        /**
          * @brief A call to EmulationActivity.getVersionCode in Kotlin
          * @return A version code in Vulkan's format with 14-bit patch + 10-bit major and minor components
          */
@@ -199,6 +214,7 @@ namespace skyline {
         jmethodID initializeControllersId;
         jmethodID vibrateDeviceId;
         jmethodID clearVibrationDeviceId;
+
         jmethodID showKeyboardId;
         jmethodID waitForSubmitOrCancelId;
         jmethodID closeKeyboardId;
@@ -207,5 +223,11 @@ namespace skyline {
         jmethodID getDhcpInfoId;
 
         jmethodID getIntegerValueId;
+
+        jmethodID showPipelineLoadingScreenId;
+        jmethodID updatePipelineLoadingProgressId;
+        jmethodID hidePipelineLoadingScreenId;
+
+        jmethodID getVersionCodeId;
     };
 }
