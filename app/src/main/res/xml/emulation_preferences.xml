@@ -170,11 +170,11 @@
             app:key="disable_subgroup_shuffle"
             app:title="@string/disable_subgroup_shuffle" />
         <SwitchPreferenceCompat
-            android:defaultValue="true"
-            android:summaryOff="@string/enable_get_va_regions_disabled"
-            android:summaryOn="@string/enable_get_va_regions_enabled"
-            app:key="enable_get_va_regions"
-            app:title="@string/enable_get_va_regions" />
+            android:defaultValue="false"
+            android:summaryOff="@string/disable_get_va_regions_disabled"
+            android:summaryOn="@string/disable_get_va_regions_enabled"
+            app:key="disable_get_va_regions"
+            app:title="@string/disable_get_va_regions" />
     </PreferenceCategory>
     <PreferenceCategory
         android:key="category_debug"

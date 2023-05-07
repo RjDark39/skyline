@@ -36,14 +36,14 @@ namespace skyline::service::nvdrv::device::nvhost {
                 Logger::Warn("Attempting to bind multiple ASes to a single GPU channel");
                 return PosixResult::InvalidArgument;
             }
-            
+
             gpuCh.asCtx = asCtx;
             gpuCh.asAllocator = vm.smallPageAllocator;
         } catch (const std::out_of_range &e) {
             Logger::Warn("Attempting to bind AS to an invalid channel: {}", channelFd);
             return PosixResult::InvalidArgument;
         }
-        
+
         return PosixResult::Success;
     }
 
@@ -246,7 +246,7 @@ namespace skyline::service::nvdrv::device::nvhost {
         if (!vm.initialised)
             return PosixResult::InvalidArgument;
         // Hack to allow Brain Training to boot
-        if (!*state.settings->enableGetVaRegions)
+        if (*state.settings->disableGetVaRegions)
             return PosixResult::Success;
 
         bufSize = 2 * sizeof(VaRegion);

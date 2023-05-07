@@ -150,9 +150,9 @@
     <string name="disable_subgroup_shuffle">Disable GPU Subgroup Shuffle</string>
     <string name="disable_subgroup_shuffle_enabled">Shader subgroup shuffle operations are disabled, may cause severe graphical issues</string>
     <string name="disable_subgroup_shuffle_disabled">Shader subgroup shuffle operations are enabled, ensures maximum accuracy</string>
-    <string name="enable_get_va_regions">Enable GetVaRegions</string>
-    <string name="enable_get_va_regions_enabled">GetVaRegions is enabled</string>
-    <string name="enable_get_va_regions_disabled">GetVaRegions is disabled. Games like Brain Training will boot, others might break.</string>
+    <string name="disable_get_va_regions">Disable GetVaRegions</string>
+    <string name="disable_get_va_regions_enabled">GetVaRegions will be bypassed</string>
+    <string name="disable_get_va_regions_disabled">GetVaRegions will be executed</string>
     <!-- Settings - Debug -->
     <string name="debug">Debug</string>
     <string name="log_level">Log Level</string>

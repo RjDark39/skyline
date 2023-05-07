@@ -84,7 +84,7 @@ namespace skyline {
         Setting<bool> enableFastGpuReadbackHack; //!< If the CPU texture readback skipping hack should be used
         Setting<bool> enableFastReadbackWrites; //!< If buffers should be treated as CPU dirty when written with the readback hack
         Setting<bool> disableSubgroupShuffle; //!< If shader subgroup suffle operations should be ignored
-        Setting<bool> enableGetVaRegions; //!< If function GetVaRegions should be allowed to be executed
+        Setting<bool> disableGetVaRegions; //!< If function GetVaRegions should be executed normally
 
         // Audio
         Setting<bool> isAudioOutputDisabled; //!< Disables audio output
