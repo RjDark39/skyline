@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-// Copyright © 2020 Skyline Team and Contributors (https://github.com/skyline-emu/)
+// Copyright © 2023 Skyline Team and Contributors (https://github.com/skyline-emu/)
 
 #pragma once
 
@@ -8,25 +8,31 @@
 
 namespace skyline::kernel::type {
     /**
-     * @brief The base kernel memory object that other memory classes derieve from
+     * @brief The base kernel shared memory object that other memory classes derieve from
      */
     class KMemory : public KObject {
+      private:
+        int fileDescriptor; //!< A file descriptor to the underlying shared memory
+
       public:
-        KMemory(const DeviceState &state, KType objectType, span <u8> guest) : KObject(state, objectType), guest(guest) {}
+        KMemory(const DeviceState &state, KType objectType, size_t size);
 
         /**
          * @return A span representing the memory object on the guest
          */
-        span <u8> guest;
+        span<u8> guest;
+        span<u8> host; //!< We also keep a host mirror of the underlying shared memory for host access, it is persistently mapped and should be used by anything accessing the memory on the host
 
         /**
-         * @brief Updates the permissions of a block of mapped memory
-         * @param ptr The starting address to change the permissions at
-         * @param size The size of the partition to change the permissions of
-         * @param permission The new permissions to be set for the memory
+         * @note 'ptr' needs to be in guest-reserved address space
          */
-        virtual void UpdatePermission(span <u8> map, memory::Permission permission) = 0;
+        virtual u8 *Map(span<u8> map, memory::Permission permission);
 
-        virtual ~KMemory() = default;
+        /**
+         * @note 'ptr' needs to be in guest-reserved address space
+         */
+        virtual void Unmap(span<u8> map);
+
+        virtual ~KMemory();
     };
 }
