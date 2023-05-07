@@ -50,6 +50,7 @@ namespace skyline {
             enableFastGpuReadbackHack = ktSettings.GetBool("enableFastGpuReadbackHack");
             enableFastReadbackWrites = ktSettings.GetBool("enableFastReadbackWrites");
             disableSubgroupShuffle = ktSettings.GetBool("disableSubgroupShuffle");
+            enableGetVaRegions = ktSettings.GetBool("enableGetVaRegions");
             isAudioOutputDisabled = ktSettings.GetBool("isAudioOutputDisabled");
             validationLayer = ktSettings.GetBool("validationLayer");
         };

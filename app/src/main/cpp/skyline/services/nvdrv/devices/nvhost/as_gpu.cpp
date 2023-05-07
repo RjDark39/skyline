@@ -2,6 +2,7 @@
 // Copyright © 2021 Skyline Team and Contributors (https://github.com/skyline-emu/)
 
 #include <common/address_space.inc>
+#include <common/settings.h>
 #include <soc.h>
 #include <soc/gm20b/gmmu.h>
 #include <services/nvdrv/driver.h>
@@ -244,6 +245,9 @@ namespace skyline::service::nvdrv::device::nvhost {
 
         if (!vm.initialised)
             return PosixResult::InvalidArgument;
+        // Hack to allow Brain Training to boot
+        if (!*state.settings->enableGetVaRegions)
+            return PosixResult::Success;
 
         bufSize = 2 * sizeof(VaRegion);
         vaRegions = std::array<VaRegion, 2> {

@@ -43,6 +43,7 @@ data class NativeSettings(
     var enableFastGpuReadbackHack : Boolean,
     var enableFastReadbackWrites : Boolean,
     var disableSubgroupShuffle : Boolean,
+    var enableGetVaRegions : Boolean,
 
     // Debug
     var validationLayer : Boolean
@@ -68,6 +69,7 @@ data class NativeSettings(
         pref.enableFastGpuReadbackHack,
         pref.enableFastReadbackWrites,
         pref.disableSubgroupShuffle,
+        pref.enableGetVaRegions,
         BuildConfig.BUILD_TYPE != "release" && pref.validationLayer
     )
 
