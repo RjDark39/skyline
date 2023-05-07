@@ -291,6 +291,18 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
+
+        binding.checkUpdatesIcon.apply {
+            if (BuildConfig.FLAVOR == "edge") {
+                visibility = View.GONE
+            } else {
+                AppUpdater.removeApk()
+                AppUpdater.notifyUpdateBadge(context, this)
+                this.setOnClickListener {
+                    AppUpdater.checkForUpdates(context)
+                }
+            }
+        }
     }
 
     override fun onResume() {
