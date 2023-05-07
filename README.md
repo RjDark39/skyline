@@ -1,21 +1,24 @@
 <h1 align="center">
-    <a href="https://github.com/skyline-emu/skyline" target="_blank">
-        <img height="60%" width="60%" src="https://raw.github.com/skyline-emu/branding/master/banner/skyline-banner-rounded.png"><br>
-    </a>
+    <img height="40%" width="40%" src="assets/Tagline-Icon.png">
+    <br/>
     <a href="https://discord.gg/XnbXNQM" target="_blank">
         <img src="https://img.shields.io/discord/545842171459272705.svg?label=&logo=discord&logoColor=ffffff&color=5865F2&labelColor=404EED">
     </a>
-    <a href="https://github.com/skyline-emu/skyline/actions/workflows/ci.yml" target="_blank">
-        <img src="https://github.com/skyline-emu/skyline/actions/workflows/ci.yml/badge.svg"><br>
+    <a href="https://github.com/8bitDream/skyline/actions/workflows/android.yml" target="_blank">
+        <img src="https://github.com/8bitDream/skyline/actions/workflows/android.yml/badge.svg"><br>
     </a>
 </h1>
 
 <p align="center">
+    Rebranded as a ccourtesy in response to <a href="https://github.com/skyline-emu/skyline/blob/ftx1/README.md">branding and license restrictions</a> requested by Skyline.
+    <br/>
+    Published in accordance with the <a href="https://github.com/skyline-emu/skyline/blob/ftx1/README.md">Skyline Mozilla Public License 2.0</a>. No support will be provided.
+    <br /><br/>
     <b><a href="CONTRIBUTING.md">Contributing Guide</a> • <a href="BUILDING.md">Building Guide</a></b>
 </p>
 
 <p align="center">
-    <b>Skyline</b> is an experimental emulator that runs on <b>ARMv8 Android™</b> devices and emulates the functionality of a <b>Nintendo Switch™</b> system, licensed under <a href="https://github.com/skyline-emu/skyline/blob/master/LICENSE.md"><b>Mozilla Public License 2.0</b></a>
+    <b>Skyline</b> is an experimental emulator that runs on <b>ARMv8 Android</b> devices and emulates the functionality of a <b>Nintendo Switch</b> system, licensed under <a href="https://github.com/skyline-emu/skyline/blob/master/LICENSE.md"><b>Mozilla Public License 2.0</b></a>
 </p>
 
 ---
@@ -38,3 +41,5 @@ A few noteworthy teams/projects who've helped us along the way are:
 ### Disclaimer
 * **Nintendo Switch** is a trademark of **Nintendo Co., Ltd**
 * **Android** is a trademark of **Google LLC**
+###
+*Skyline is not affiliated, associated, authorized, endorsed by, or in any way connected with Nintendo. No licensed resources are included. Files created with or resulting from this project are not intended for sale or distribution. This project is for educational and archival purposes only.*

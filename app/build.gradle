@@ -53,7 +53,7 @@ android {
     }
 
     /* JVM Bytecode Options */
-    def javaVersion = JavaVersion.VERSION_1_8
+    def javaVersion = JavaVersion.VERSION_17
     kotlinOptions {
         jvmTarget = javaVersion.toString()
         freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
@@ -115,28 +115,25 @@ android {
     productFlavors {
         full {
             dimension = "version"
-            manifestPlaceholders += [appLabel: "Skyline"]
         }
 
         dev {
             dimension = "version"
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
-            manifestPlaceholders += [appLabel: "Skyline Dev"]
         }
 
         bit {
             dimension = "version"
             applicationIdSuffix = ".eightbit"
-            versionNameSuffix = "-eightbit"
-            manifestPlaceholders.appLabel = "Skyline (8-bit)"
+            versionNameSuffix = "-8bit"
             manifestPlaceholders.shouldSaveUserData = "true"
             manifestPlaceholders.emulationProcess = ":emulationProcess"
             project.archivesBaseName = "skyline-${gitCommitHash.substring(0, 7)}"
 
             try {
                 def keystoreProps = new Properties()
-                keystoreProps.load(new FileInputStream(rootProject.file("cmd/keystore.properties")))
+                keystoreProps.load(new FileInputStream(rootProject.file("keystore.properties")))
                 signingConfigs {
                     document {
                         keyAlias keystoreProps['keyAlias']
