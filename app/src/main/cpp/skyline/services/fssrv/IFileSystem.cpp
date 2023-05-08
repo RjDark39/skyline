@@ -69,6 +69,12 @@ namespace skyline::service::fssrv {
         return {};
     }
 
+    Result IFileSystem::DeleteDirectoryRecursively(type::KSession &session, ipc::IpcRequest &request, ipc::IpcResponse &response) {
+        std::string path{request.inputBuf.at(0).as_string(true)};
+        std::filesystem::remove_all(path);
+        return {};
+    }
+
     Result IFileSystem::OpenDirectory(type::KSession &session, ipc::IpcRequest &request, ipc::IpcResponse &response) {
         std::string path(request.inputBuf.at(0).as_string(true));
 
@@ -91,9 +97,25 @@ namespace skyline::service::fssrv {
     Result IFileSystem::GetFreeSpaceSize(type::KSession &session, ipc::IpcRequest &request, ipc::IpcResponse &response) {
         struct statvfs data;
         if (fstatvfs(NULL, &data) < 0)
-          response.Push<u64>(0);
+          response.Push<u64>(90000000);
         else
           response.Push<u64>(data.f_bsize * data.f_bavail);
+        return {};
+    }
+
+    Result IFileSystem::GetTotalSpaceSize(type::KSession &session, ipc::IpcRequest &request, ipc::IpcResponse &response) {
+        struct statvfs data;
+        if (fstatvfs(NULL, &data) < 0)
+          response.Push<u64>(90000000);
+        else
+          response.Push<u64>(data.f_bsize * data.f_bfree);
+        return {};
+    }
+
+    Result IFileSystem::CleanDirectoryRecursively(type::KSession &session, ipc::IpcRequest &request, ipc::IpcResponse &response) {
+        std::string path{request.inputBuf.at(0).as_string(true)};
+        std::filesystem::remove_all(path);
+        backing->CreateDirectory(path, true);
         return {};
     }
 
