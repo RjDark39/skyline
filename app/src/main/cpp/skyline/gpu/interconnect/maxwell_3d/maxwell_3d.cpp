@@ -121,11 +121,11 @@ namespace skyline::gpu::interconnect::maxwell3d {
 
         auto colorAttachments{activeState.GetColorAttachments()};
         auto depthStencilAttachment{activeState.GetDepthAttachment()};
-        auto depthStencilAttachmentSpan{depthStencilAttachment ? span<TextureView *>(depthStencilAttachment) : span<TextureView *>()};
+        auto depthStencilAttachmentSpan{depthStencilAttachment ? span<HostTextureView *>(depthStencilAttachment) : span<HostTextureView *>()};
         for (auto attachment : ranges::views::concat(colorAttachments, depthStencilAttachmentSpan)) {
             if (attachment) {
-                scissor.extent.width = std::min(scissor.extent.width, static_cast<u32>(static_cast<i32>(attachment->texture->dimensions.width) - scissor.offset.x));
-                scissor.extent.height = std::min(scissor.extent.height, static_cast<u32>(static_cast<i32>(attachment->texture->dimensions.height) - scissor.offset.y));
+                scissor.extent.width = std::min(scissor.extent.width, static_cast<u32>(static_cast<i32>(attachment->hostTexture->dimensions.width) - scissor.offset.x));
+                scissor.extent.height = std::min(scissor.extent.height, static_cast<u32>(static_cast<i32>(attachment->hostTexture->dimensions.height) - scissor.offset.y));
             }
         }
 
@@ -284,10 +284,10 @@ namespace skyline::gpu::interconnect::maxwell3d {
         }
 
         if (!clearAttachments.empty()) {
-            std::array<TextureView *, 1> colorAttachments{colorView ? &*colorView : nullptr};
-            ctx.executor.AddSubpass([clearAttachments, clearRects](vk::raii::CommandBuffer &commandBuffer, const std::shared_ptr<FenceCycle> &, GPU &, vk::RenderPass, u32) {
+            std::array<HostTextureView *, 1> colorAttachments{colorView ? &*colorView : nullptr};
+            ctx.executor.AddSubpass([clearAttachments, clearRects](vk::raii::CommandBuffer &commandBuffer, const std::shared_ptr<FenceCycle> &, GPU &) {
                 commandBuffer.clearAttachments(clearAttachments, span(clearRects).first(clearAttachments.size()));
-            }, renderArea, {}, {}, colorView ? colorAttachments : span<TextureView *>{}, depthStencilView ? &*depthStencilView : nullptr);
+            }, renderArea, {}, colorView ? colorAttachments : span<HostTextureView *>{}, depthStencilView ? &*depthStencilView : nullptr);
         }
 
         ctx.executor.AddCheckpoint("After clear");
@@ -364,7 +364,7 @@ namespace skyline::gpu::interconnect::maxwell3d {
 
             if (drawParams->transformFeedbackEnable)
                 commandBuffer.endTransformFeedbackEXT(0, {}, {});
-        }, scissor, activeDescriptorSetSampledImages, {}, activeState.GetColorAttachments(), activeState.GetDepthAttachment(), !ctx.gpu.traits.quirks.relaxedRenderPassCompatibility, srcStageMask, dstStageMask);
+        }, scissor, activeDescriptorSetSampledImages, activeState.GetColorAttachments(), activeState.GetDepthAttachment(), srcStageMask, dstStageMask);
         ctx.executor.AddCheckpoint("After draw");
     }
 
@@ -413,7 +413,7 @@ namespace skyline::gpu::interconnect::maxwell3d {
         constantBuffers.ResetQuickBind();
 
         ctx.executor.AddCheckpoint("Before indirect draw");
-        ctx.executor.AddSubpass([drawParams](vk::raii::CommandBuffer &commandBuffer, const std::shared_ptr<FenceCycle> &, GPU &gpu, vk::RenderPass, u32) {
+        ctx.executor.AddSubpass([drawParams](vk::raii::CommandBuffer &commandBuffer, const std::shared_ptr<FenceCycle> &, GPU &gpu) {
             drawParams->stateUpdater.RecordAll(gpu, commandBuffer);
 
             if (drawParams->transformFeedbackEnable)
@@ -427,7 +427,7 @@ namespace skyline::gpu::interconnect::maxwell3d {
 
             if (drawParams->transformFeedbackEnable)
                 commandBuffer.endTransformFeedbackEXT(0, {}, {});
-        }, scissor, activeDescriptorSetSampledImages, {}, activeState.GetColorAttachments(), activeState.GetDepthAttachment(), !ctx.gpu.traits.quirks.relaxedRenderPassCompatibility, srcStageMask, dstStageMask);
+        }, scissor, activeDescriptorSetSampledImages, activeState.GetColorAttachments(), activeState.GetDepthAttachment(), srcStageMask, dstStageMask);
         ctx.executor.AddCheckpoint("After indirect draw");
     }
 

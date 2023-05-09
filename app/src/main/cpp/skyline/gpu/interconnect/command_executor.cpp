@@ -140,21 +140,21 @@ namespace skyline::gpu::interconnect {
                     subpassIndex = 0;
                 },
 
-                [&](NextSubpassNode &node) {
-                    TRACE_EVENT_INSTANT("gpu", "NextSubpassNode");
-                    node(slot->commandBuffer, slot->cycle, gpu);
-                    ++subpassIndex;
-                },
-
-                [&](SubpassFunctionNode &node) {
-                    TRACE_EVENT_INSTANT("gpu", "SubpassFunctionNode");
-                    node(slot->commandBuffer, slot->cycle, gpu, lRenderPass, subpassIndex);
-                },
-
-                [&](NextSubpassFunctionNode &node) {
-                    TRACE_EVENT_INSTANT("gpu", "NextSubpassFunctionNode");
-                    node(slot->commandBuffer, slot->cycle, gpu, lRenderPass, ++subpassIndex);
-                },
+                //[&](NextSubpassNode &node) {
+                //    TRACE_EVENT_INSTANT("gpu", "NextSubpassNode");
+                //    node(slot->commandBuffer, slot->cycle, gpu);
+                //    ++subpassIndex;
+                //},
+//
+                //[&](SubpassFunctionNode &node) {
+                //    TRACE_EVENT_INSTANT("gpu", "SubpassFunctionNode");
+                //    node(slot->commandBuffer, slot->cycle, gpu, lRenderPass, subpassIndex);
+                //},
+//
+                //[&](NextSubpassFunctionNode &node) {
+                //    TRACE_EVENT_INSTANT("gpu", "NextSubpassFunctionNode");
+                //    node(slot->commandBuffer, slot->cycle, gpu, lRenderPass, ++subpassIndex);
+                //},
 
                 [&](RenderPassEndNode &node) {
                     TRACE_EVENT_INSTANT("gpu", "RenderPassEndNode");

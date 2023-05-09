@@ -92,5 +92,5 @@ namespace skyline::gpu::interconnect::node {
         u32 id;
     };
 
-    using NodeVariant = std::variant<FunctionNode, CheckpointNode, RenderPassNode, NextSubpassNode, SubpassFunctionNode, NextSubpassFunctionNode, RenderPassEndNode>; //!< A variant encompassing all command nodes types
+    using NodeVariant = std::variant<FunctionNode, CheckpointNode, RenderPassNode, RenderPassEndNode>; //!< A variant encompassing all command nodes types
 }

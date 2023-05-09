@@ -239,6 +239,14 @@ namespace skyline::gpu {
         }
     }
 
+    void Texture::FreeGuest() {
+        // Avoid freeing memory if the backing format doesn't match, as otherwise texture data would be lost on the guest side, also avoid if fast readback is active
+        if (*gpu.state.settings->freeGuestTextureMemory && !(accumulatedGuestWaitTime > SkipReadbackHackWaitTimeThreshold && *gpu.state.settings->enableFastGpuReadbackHack)) {
+            gpu.state.process->memory.FreeMemory(mirror);
+            memoryFreed = true;
+        }
+    }
+
     void Texture::AttachCycle(const std::shared_ptr<FenceCycle>& lCycle) {
         lCycle->AttachObject(shared_from_this());
         lCycle->ChainCycle(cycle);
@@ -268,7 +276,7 @@ namespace skyline::gpu {
     }
 
     void Texture::MarkGpuDirty(UsageTracker &usageTracker) {
-        for (auto mapping : guest->mappings)
+        for (auto mapping : guest.mappings)
             if (mapping.valid())
                 usageTracker.dirtyIntervals.Insert(mapping);
     }

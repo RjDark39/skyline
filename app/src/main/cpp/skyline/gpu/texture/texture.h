@@ -93,6 +93,12 @@ namespace skyline::gpu {
         bool try_lock();
 
         /**
+         * @brief Frees the guest side copy of the texture
+         * @note `stateMutex` must be locked when calling this function
+         */
+        void FreeGuest();
+
+        /**
          * @brief Attempts to find or create a host texture view for the given parameters, this may result in the creation of a new host texture
          * @return A pointer to the host texture view, this may be null if a host texture is compatible but needs VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT
          */

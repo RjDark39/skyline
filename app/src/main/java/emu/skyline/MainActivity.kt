@@ -29,8 +29,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import emu.skyline.adapter.AppViewItem
 import emu.skyline.adapter.GenericAdapter
 import emu.skyline.adapter.GridSpacingItemDecoration
-import emu.skyline.adapter.HeaderRomFilterItem
-import emu.skyline.adapter.HeaderViewItem
 import emu.skyline.adapter.LayoutType
 import emu.skyline.data.AppItem
 import emu.skyline.data.AppItemTag

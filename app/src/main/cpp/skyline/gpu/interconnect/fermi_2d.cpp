@@ -82,15 +82,14 @@ namespace skyline::gpu::interconnect {
         texture::Dimensions dimensions{};
         texture::TileConfig tileConfig{};
 
-
         u64 addressOffset{};
-        if (surface.memoryLayout == MemoryLayout::Pitch) {        
-            // OpenGL games rely on reads wrapping around to the next line when reading out of bounds, emulate this behaviour by offsetting the address
-            if (oobReadStart && surface.width == (oobReadWidth + oobReadStart) && (oobReadWidth + oobReadStart) > texture.dimensions.width)
-                addressOffset += oobReadStart * texture.format->bpb;
-
-            texture.tileConfig = gpu::texture::TileConfig{
+        if (surface.memoryLayout == MemoryLayout::Pitch) {
             dimensions = gpu::texture::Dimensions{surface.stride / format->bpb, surface.height, 1};
+
+            // OpenGL games rely on reads wrapping around to the next line when reading out of bounds, emulate this behaviour by offsetting the address
+            if (oobReadStart && surface.width == (oobReadWidth + oobReadStart) && (oobReadWidth + oobReadStart) > dimensions.width)
+                addressOffset += oobReadStart * format->bpb;
+
             tileConfig = gpu::texture::TileConfig{
                 .mode = gpu::texture::TileMode::Pitch,
                 .pitch = surface.stride
@@ -103,7 +102,6 @@ namespace skyline::gpu::interconnect {
                 .blockDepth = surface.blockSize.Depth(),
             };
         }
-
 
 		u32 layerStride{texture::CalculateLayerStride(dimensions, format, tileConfig, 1, 1)};
         return {FermiTexture{
@@ -132,7 +130,7 @@ namespace skyline::gpu::interconnect {
 
         // TODO: When we support MSAA perform a resolve operation rather than blit when the `resolve` flag is set.
         auto [srcFermiTexture, srcWentOob]{GetFermiTexture(srcSurface, oobReadStart, oobReadWidth)};
-        auto [dstFermiTexture, srcWentOob]{GetFermiTexture(dstSurface)};
+        auto [dstFermiTexture, dstWentOob]{GetFermiTexture(dstSurface)};
 		
 		if (srcWentOob)
             centredSrcRectX = 0.0f;
@@ -175,7 +173,6 @@ namespace skyline::gpu::interconnect {
             }
         );
         executor.AddCheckpoint("After blit");
-
 
         executor.NotifyPipelineChange();
     }
