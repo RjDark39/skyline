@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 // Copyright © 2020 Skyline Team and Contributors (https://github.com/skyline-emu/)
+// Copyright © 2022 yuzu Emulator Project (https://github.com/yuzu-emu/)
 
 #include "IResolver.h"
 #include <arpa/inet.h>
@@ -56,11 +57,11 @@ namespace skyline::service::socket {
         }
 
         addrinfo *result;
-        i32 resultCode = getaddrinfo(hostname.data(), service.data(), nullptr, &result);
+        i32 resultCode{getaddrinfo(hostname.data(), service.data(), nullptr, &result)};
 
         u32 dataSize{0};
-        if (resultCode == 0 && result != nullptr) {
-            const std::vector<u8> data = SerializeAddrInfo(result, resultCode, hostname);
+        if (resultCode == 0 && result) {
+            std::vector<u8> data{SerializeAddrInfo(result, resultCode, hostname)};
             dataSize = static_cast<u32>(data.size());
             request.outputBuf.at(0).copy_from(data);
             freeaddrinfo(result);
@@ -72,10 +73,10 @@ namespace skyline::service::socket {
     std::vector<u8> IResolver::SerializeAddrInfo(const addrinfo* addrinfo, i32 result_code, std::string_view host) {
         std::vector<u8> data;
 
-        auto* current{addrinfo};
-        while (current != nullptr) {
+        auto* curAddrInfo{addrinfo};
+        while (curAddrInfo != nullptr) {
             struct SerializedResponseHeader {
-                u32 magic;
+                u32 magic{util::SwapEndianness(0xbeefcafe)};
                 u32 flags;
                 u32 family;
                 u32 socketType;
@@ -84,31 +85,29 @@ namespace skyline::service::socket {
             };
             static_assert(sizeof(SerializedResponseHeader) == 0x18);
 
-            constexpr auto headerSize{sizeof(SerializedResponseHeader)};
-            const auto addrSize{current->ai_addr && current->ai_addrlen > 0 ? current->ai_addrlen : 4};
-            const auto canonnameSize{current->ai_canonname ? strlen(current->ai_canonname) + 1 : 1};
+            const auto addrSize{curAddrInfo->ai_addr && curAddrInfo->ai_addrlen > 0 ? curAddrInfo->ai_addrlen : 4};
+            const auto canonnameSize{curAddrInfo->ai_canonname ? strlen(curAddrInfo->ai_canonname) + 1 : 1};
 
-            const auto lastSize{data.size()};
-            data.resize(lastSize + headerSize + addrSize + canonnameSize);
+            const size_t lastSize{data.size()};
+            auto curOutputRegion{span(data).subspan(lastSize)};
+            data.resize(lastSize + sizeof(SerializedResponseHeader) + addrSize + canonnameSize);
 
             // Header in network byte order
-            SerializedResponseHeader header{};
-
-            constexpr auto HEADER_MAGIC{0xBEEFCAFE};
-            header.magic = htonl(HEADER_MAGIC);
-            header.family = htonl(current->ai_family);
-            header.flags = htonl(current->ai_flags);
-            header.socketType = htonl(current->ai_socktype);
-            header.protocol = htonl(current->ai_protocol);
-            header.addressLength = current->ai_addr ? htonl((u32)current->ai_addrlen) : 0;
+            SerializedResponseHeader header{
+                .family = htonl(curAddrInfo->ai_family),
+                .flags = htonl(curAddrInfo->ai_flags),
+                .socketType = htonl(curAddrInfo->ai_socktype),
+                .protocol = htonl(curAddrInfo->ai_protocol),
+                .addressLength = curAddrInfo->ai_addr ? htonl((u32)curAddrInfo->ai_addrlen) : 0,
+            };
 
             auto* headerPtr{data.data() + lastSize};
-            std::memcpy(headerPtr, &header, headerSize);
+            std::memcpy(headerPtr, &header, sizeof(SerializedResponseHeader));
 
             if (header.addressLength == 0) {
-                std::memset(headerPtr + headerSize, 0, 4);
+                std::memset(headerPtr + sizeof(SerializedResponseHeader), 0, 4);
             } else {
-                switch (current->ai_family) {
+                switch (curAddrInfo->ai_family) {
                     case AF_INET: {
                         struct SockAddrIn {
                             u16 sin_family;
@@ -117,12 +116,13 @@ namespace skyline::service::socket {
                             u8 sin_zero[8];
                         };
 
-                        SockAddrIn serializedAddr{};
-                        const auto addr{*reinterpret_cast<sockaddr_in*>(current->ai_addr)};
-                        serializedAddr.sin_port = htons(addr.sin_port);
-                        serializedAddr.sin_family = htons(addr.sin_family);
-                        serializedAddr.sin_addr = htonl(addr.sin_addr.s_addr);
-                        std::memcpy(headerPtr + headerSize, &serializedAddr, sizeof(SockAddrIn));
+                        const auto addr{*reinterpret_cast<sockaddr_in*>(curAddrInfo->ai_addr)};
+                        SockAddrIn serializedAddr{
+                            .sin_port = htons(addr.sin_port),
+                            .sin_family = htons(addr.sin_family),
+                            .sin_addr = htonl(addr.sin_addr.s_addr),
+                        };
+                        std::memcpy(headerPtr + sizeof(SerializedResponseHeader), &serializedAddr, sizeof(SockAddrIn));
 
                         char addrStringBuf[64]{};
                         inet_ntop(AF_INET, &addr.sin_addr, addrStringBuf, std::size(addrStringBuf));
@@ -138,14 +138,15 @@ namespace skyline::service::socket {
                             u32 sin6_scope_id;
                         };
 
-                        SockAddrIn6 serializedAddr{};
-                        const auto addr{*reinterpret_cast<sockaddr_in6*>(current->ai_addr)};
-                        serializedAddr.sin6_family = htons(addr.sin6_family);
-                        serializedAddr.sin6_port = htons(addr.sin6_port);
-                        serializedAddr.sin6_flowinfo = htonl(addr.sin6_flowinfo);
-                        serializedAddr.sin6_scope_id = htonl(addr.sin6_scope_id);
+                        const auto addr{*reinterpret_cast<sockaddr_in6*>(curAddrInfo->ai_addr)};
+                        SockAddrIn6 serializedAddr{
+                            .sin6_family = htons(addr.sin6_family),
+                            .sin6_port = htons(addr.sin6_port),
+                            .sin6_flowinfo = htonl(addr.sin6_flowinfo),
+                            .sin6_scope_id = htonl(addr.sin6_scope_id),
+                        };
                         std::memcpy(serializedAddr.sin6_addr, &addr.sin6_addr, sizeof(SockAddrIn6::sin6_addr));
-                        std::memcpy(headerPtr + headerSize, &serializedAddr, sizeof(SockAddrIn6));
+                        std::memcpy(headerPtr + sizeof(SerializedResponseHeader), &serializedAddr, sizeof(SockAddrIn6));
 
                         char addrStringBuf[64]{};
                         inet_ntop(AF_INET6, &addr.sin6_addr, addrStringBuf, std::size(addrStringBuf));
@@ -153,17 +154,17 @@ namespace skyline::service::socket {
                         break;
                     }
                     default:
-                        std::memcpy(headerPtr + headerSize, current->ai_addr, addrSize);
+                        std::memcpy(headerPtr + sizeof(SerializedResponseHeader), curAddrInfo->ai_addr, addrSize);
                         break;
                 }
             }
-            if (current->ai_canonname) {
-                std::memcpy(headerPtr + addrSize, current->ai_canonname, canonnameSize);
+            if (curAddrInfo->ai_canonname) {
+                std::memcpy(headerPtr + addrSize, curAddrInfo->ai_canonname, canonnameSize);
             } else {
-                *(headerPtr + headerSize + addrSize) = 0;
+                *(headerPtr + sizeof(SerializedResponseHeader) + addrSize) = 0;
             }
 
-            current = current->ai_next;
+            curAddrInfo = curAddrInfo->ai_next;
         }
 
         // 4-byte sentinel value

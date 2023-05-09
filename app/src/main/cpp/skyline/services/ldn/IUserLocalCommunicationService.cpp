@@ -54,7 +54,7 @@ namespace skyline::service::ldn {
     }
 
     Result IUserLocalCommunicationService::GetNetworkInfoLatestUpdate(type::KSession &session, ipc::IpcRequest &request, ipc::IpcResponse &response) {
-        const size_t networkBuffferSize{request.outputBuf.at(0).size()};
+        size_t networkBuffferSize{request.outputBuf.at(0).size()};
         const size_t nodeBufferCount{request.outputBuf.at(1).size() / sizeof(NodeLatestUpdate)};
 
         if (nodeBufferCount == 0 || networkBuffferSize != sizeof(NetworkInfo))
@@ -69,7 +69,7 @@ namespace skyline::service::ldn {
     }
 
     Result IUserLocalCommunicationService::Scan(type::KSession &session, ipc::IpcRequest &request, ipc::IpcResponse &response) {
-        const size_t networkInfoSize{request.outputBuf.at(0).size() / sizeof(NetworkInfo)};
+        size_t networkInfoSize{request.outputBuf.at(0).size() / sizeof(NetworkInfo)};
 
         if (networkInfoSize == 0)
             return result::InvalidInput;

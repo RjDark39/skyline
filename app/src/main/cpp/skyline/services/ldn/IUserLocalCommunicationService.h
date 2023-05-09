@@ -11,7 +11,7 @@ namespace skyline::service::ldn {
         constexpr Result InvalidInput{203, 96};
     }
 
-    constexpr size_t SsidLengthMax = 32;
+    static constexpr size_t SsidLengthMax = 32;
     constexpr size_t UserNameBytesMax = 32;
     constexpr i32 NodeCountMax = 8;
     constexpr size_t AdvertiseDataSizeMax = 384;

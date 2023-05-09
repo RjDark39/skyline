@@ -497,23 +497,23 @@ class EmulationActivity : AppCompatActivity(), SurfaceHolder.Callback, View.OnTo
     */
     private fun updateCurrentLayout(newLayoutInfo: WindowLayoutInfo) {
         if (!emulationSettings.enableFoldableLayout) return
-        binding.onScreenGameView.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
-        binding.controllerViewContainer.updatePadding(0, 0, 0, 0)
-        binding.controllerViewContainer.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+        binding.gameViewContainer.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+        binding.overlayViewContainer.updatePadding(0, 0, 0, 0)
+        binding.overlayViewContainer.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
         requestedOrientation = emulationSettings.orientation
         val foldingFeature = newLayoutInfo.displayFeatures.find { it is FoldingFeature }
         (foldingFeature as? FoldingFeature)?.let {
             if (it.isSeparating) {
                 requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                 if (it.orientation == FoldingFeature.Orientation.HORIZONTAL) {
-                    binding.onScreenGameView.layoutParams.height = it.bounds.top
-                    binding.controllerViewContainer.layoutParams.height = it.bounds.bottom - 48.toPx
-                    binding.controllerViewContainer.updatePadding(0, 0, 0, 24.toPx)
+                    binding.gameViewContainer.layoutParams.height = it.bounds.top
+                    binding.overlayViewContainer.layoutParams.height = it.bounds.bottom - 48.toPx
+                    binding.overlayViewContainer.updatePadding(0, 0, 0, 24.toPx)
                 }
             }
         }
-        binding.onScreenGameView.requestLayout()
-        binding.controllerViewContainer.requestLayout()
+        binding.gameViewContainer.requestLayout()
+        binding.overlayViewContainer.requestLayout()
     }
 
     /**
@@ -700,10 +700,11 @@ class EmulationActivity : AppCompatActivity(), SurfaceHolder.Callback, View.OnTo
         return dialog.waitForSubmitOrCancel().let { arrayOf(if (it.cancelled) 1 else 0, it.text) }
     }
 
-    @Suppress("unused")
+    @Suppress("deprecation")
     fun getDhcpInfo() : DhcpInfo {
-        val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-        return wifiManager.dhcpInfo
+        return with (applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager) {
+            dhcpInfo
+        }
     }
 
     @Suppress("unused")
