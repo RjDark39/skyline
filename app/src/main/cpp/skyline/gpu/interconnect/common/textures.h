@@ -43,7 +43,7 @@ namespace skyline::gpu::interconnect {
             HostTextureView *view;
             u64 sequenceNumber;
         };
-        std::vector<CacheEntry> textureHeaderCache;
+        std::map<u32, CacheEntry> textureHeaderCache;
 
       public:
         Textures(DirtyManager &manager, const TexturePoolState::EngineRegisters &engine);

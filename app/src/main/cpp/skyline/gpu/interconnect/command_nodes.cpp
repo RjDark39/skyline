@@ -37,7 +37,6 @@ namespace skyline::gpu::interconnect::node {
             }
         }};
 
-        if (colorAttachments.size() < pColorAttachments.size()) {
             // If the new attachments are larger than the existing attachments then we need to add them
             colorAttachments.resize(pColorAttachments.size());
             for (size_t i{subsetAttachmentCount}; i < pColorAttachments.size(); i++) {
@@ -51,7 +50,7 @@ namespace skyline::gpu::interconnect::node {
                 if (pDepthStencilAttachment)
                     updateBarrierMask(pDepthStencilAttachment, false);
             }
-        }
+
 
         // Note: No need to change the attachments if the new attachments are a subset of the existing attachments
 
@@ -64,36 +63,32 @@ namespace skyline::gpu::interconnect::node {
     }
 
     bool RenderPassNode::ClearColorAttachment(u32 attachmentIndex, const vk::ClearColorValue &value, GPU &gpu) {
-        /*
-        auto &attachment{colorAttachments.at(attachmentIndex)};
-
-        if (attachment->hasClearValue && clearValues[attachmentIndex].color.uint32 == value.uint32) {
-            return true;
-        } else {
-            clearValues.resize(attachmentIndex + 1);
-            clearValues[attachmentIndex].color = value;
-            attachment->hasClearValue = true;
-            return true;
-        }
-        */
+        //auto &attachment{colorAttachments.at(attachmentIndex)};
+//
+        //if (attachment->hasClearValue && clearValues[attachmentIndex].color.uint32 == value.uint32) {
+        //    return true;
+        //} else {
+        //    clearValues.resize(attachmentIndex + 1);
+        //    clearValues[attachmentIndex].color = value;
+        //    attachment->hasClearValue = true;
+        //    return true;
+        //}
 
         return false;
     }
 
     bool RenderPassNode::ClearDepthStencilAttachment(const vk::ClearDepthStencilValue &value, GPU &gpu) {
-        /*
-        auto &attachment{depthStencilAttachment.value()};
-        size_t attachmentIndex{colorAttachments.size()};
-
-        if (attachment->hasClearValue && clearValues[attachmentIndex].color.uint32 == value.uint32) {
-            return true;
-        } else {
-            clearValues.resize(attachmentIndex + 1);
-            clearValues[attachmentIndex].color = value;
-            attachment->hasClearValue = true;
-            return true;
-        }
-        */
+        //auto &attachment{depthStencilAttachment.value()};
+        //size_t attachmentIndex{colorAttachments.size()};
+//
+        //if (attachment.hasClearValue && (clearValues[attachmentIndex].depthStencil.depth == value.depth) && (clearValues[attachmentIndex].depthStencil.stencil == value.stencil)) {
+        //    return true;
+        //} else {
+        //    clearValues.resize(attachmentIndex + 1);
+        //    clearValues[attachmentIndex].depthStencil = value;
+        //    attachment.hasClearValue = true;
+        //    return true;
+        //}
 
         return false;
     }

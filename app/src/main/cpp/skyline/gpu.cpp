@@ -343,7 +343,46 @@ namespace skyline::gpu {
 
     static PFN_vkGetInstanceProcAddr LoadVulkanDriver(const DeviceState &state, adrenotools_gpu_mapping *mapping) {
         void *libvulkanHandle{};
-        libvulkanHandle = dlopen("libvulkan.so", RTLD_NOW);
+
+        // If the user has selected a custom driver, try to load it
+        if (!(*state.settings->gpuDriver).empty()) {
+            libvulkanHandle = adrenotools_open_libvulkan(
+                RTLD_NOW,
+                ADRENOTOOLS_DRIVER_FILE_REDIRECT | ADRENOTOOLS_DRIVER_CUSTOM | ADRENOTOOLS_DRIVER_GPU_MAPPING_IMPORT,
+                nullptr, // We require Android 10 so don't need to supply
+                state.os->nativeLibraryPath.c_str(),
+                (state.os->privateAppFilesPath + "gpu_drivers/" + *state.settings->gpuDriver + "/").c_str(),
+                (*state.settings->gpuDriverLibraryName).c_str(),
+                (state.os->publicAppFilesPath + "gpu/vk_file_redirect/").c_str(),
+                mapping
+            );
+
+            if (!libvulkanHandle) {
+                char *error = dlerror();
+                Logger::Warn("Failed to load custom Vulkan driver {}/{}: {}", *state.settings->gpuDriver, *state.settings->gpuDriverLibraryName, error ? error : "");
+            }
+        }
+
+        if (!libvulkanHandle) {
+            libvulkanHandle = adrenotools_open_libvulkan(
+                RTLD_NOW,
+                ADRENOTOOLS_DRIVER_FILE_REDIRECT | ADRENOTOOLS_DRIVER_GPU_MAPPING_IMPORT,
+                nullptr, // We require Android 10 so don't need to supply
+                state.os->nativeLibraryPath.c_str(),
+                nullptr,
+                nullptr,
+                (state.os->publicAppFilesPath + "gpu/vk_file_redirect/").c_str(),
+                mapping
+            );
+
+            if (!libvulkanHandle) {
+                char *error = dlerror();
+                Logger::Warn("Failed to load builtin Vulkan driver: {}", error ? error : "");
+            }
+
+            if (!libvulkanHandle)
+                libvulkanHandle = dlopen("libvulkan.so", RTLD_NOW);
+        }
 
         return reinterpret_cast<PFN_vkGetInstanceProcAddr>(dlsym(libvulkanHandle, "vkGetInstanceProcAddr"));
     }

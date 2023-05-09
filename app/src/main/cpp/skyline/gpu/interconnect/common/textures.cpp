@@ -30,6 +30,7 @@ namespace skyline::gpu::interconnect {
 
     void Textures::MarkAllDirty() {
         texturePool.MarkDirty(true);
+        textureHeaderCache.clear();
     }
 
     static texture::Format ConvertTicFormat(TextureImageControl::FormatWord format, bool srgb) {
@@ -205,10 +206,7 @@ namespace skyline::gpu::interconnect {
 
     HostTextureView *Textures::GetTexture(InterconnectContext &ctx, u32 index, Shader::TextureType shaderType) {
         auto textureHeaders{texturePool.UpdateGet(ctx).textureHeaders};
-        if (textureHeaderCache.size() != textureHeaders.size()) {
-            textureHeaderCache.resize(textureHeaders.size());
-            std::fill(textureHeaderCache.begin(), textureHeaderCache.end(), CacheEntry{});
-        } else if (textureHeaders.size() > index && textureHeaderCache[index].view) {
+        if (textureHeaders.size() > index && textureHeaderCache[index].view) {
             auto &cached{textureHeaderCache[index]};
             if (cached.sequenceNumber == ctx.channelCtx.channelSequenceNumber)
                 return cached.view;
@@ -219,9 +217,9 @@ namespace skyline::gpu::interconnect {
                 return cached.view;
             }
         }
-
-        if (index >= textureHeaders.size())
+        if (index >= textureHeaders.size()) [[unlikely]] {
             return nullptr;
+        }
 
         TextureImageControl &textureHeader{textureHeaders[index]};
         auto &texture{textureHeaderStore[textureHeader]};

@@ -13,14 +13,9 @@
 
 namespace skyline::gpu {
     TextureManager::LookupResult TextureManager::LookupRange(span<u8> range) {
-        /*auto mappingEnd{std::upper_bound(textures.begin(), textures.end(), range, [](const auto &value, const auto &element) {
-            return value.end() < element.end();
-        })}, mappingBegin{std::lower_bound(mappingEnd, textures.end(), range, [](const auto &value, const auto &element) {
-            return value.begin() < element.end();
-        })};*/
         LookupResult result;
         for (auto it{textures.begin()}; it != textures.end(); ++it) {
-            if (it->iterator->begin() <= range.end() && range.end() <= it->iterator->end())
+            if ((it->iterator->begin() < range.end() && range.end() <= it->iterator->end()) || (range.begin() < it->iterator->end() && it->iterator->end() <= range.end()))
                 result.push_back(it);
         }
 
@@ -37,12 +32,6 @@ namespace skyline::gpu {
             auto &mapping{*mappingIt};
             if (!mapping.valid())
                 continue;
-
-            /*
-            auto it{std::upper_bound(textures.begin(), textures.end(), mapping, [](const auto &value, const auto &element) {
-                return value.end() < element.end();
-            })};
-            */
 
             textures.emplace_back(texture, mappingIt, mapping);
         }
@@ -227,6 +216,8 @@ namespace skyline::gpu {
 
         auto checkMappingCompatible{[&mappings](texture::Mappings::iterator mappingIt, const TextureMapping &firstTargetOverlap) {
             auto &targetMappings{firstTargetOverlap.texture->guest.mappings};
+            if (!firstTargetOverlap.texture)
+                return false;
             if (mappingIt != mappings.begin() && firstTargetOverlap.iterator != targetMappings.begin())
                 return false; // The target texture is only allowed to have mappings before the first mapping of the source texture
             for (auto it{firstTargetOverlap.iterator}; it != targetMappings.end() && mappingIt != mappings.end(); ++it, ++mappingIt)

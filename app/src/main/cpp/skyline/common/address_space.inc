@@ -43,7 +43,7 @@ namespace skyline {
                         return blockEndPredecessor->phys + virtEnd - blockEndPredecessor->virt;
                 }()};
 
-                if (blockEndPredecessor->virt >= virt) {
+                if (blockEndPredecessor != blocks.begin() && blockEndPredecessor->virt >= virt) {
                     // If this block's start would be overlapped by the map then reuse it as a tail block
                     blockEndPredecessor->virt = virtEnd;
                     blockEndPredecessor->phys = tailPhys;

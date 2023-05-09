@@ -334,7 +334,7 @@ namespace skyline::gpu::interconnect::maxwell3d {
         };
         auto *drawParams{ctx.executor.allocator->EmplaceUntracked<DrawParams>(DrawParams{stateUpdater,
                                                                                          count, first, instanceCount, vertexOffset, firstInstance, indexed,
-                                                                                         ctx.gpu.traits.supportsTransformFeedback ? transformFeedbackEnable : false})};
+                                                                                         ctx.gpu.traits.supportsTransformFeedback && transformFeedbackEnable})};
 
         vk::Rect2D scissor{GetDrawScissor()};
 
