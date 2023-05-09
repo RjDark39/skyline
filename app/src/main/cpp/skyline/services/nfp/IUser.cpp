@@ -45,7 +45,7 @@ namespace skyline::service::nfp {
     }
 
     Result IUser::GetApplicationArea(type::KSession &session, ipc::IpcRequest &request, ipc::IpcResponse &response) {
-        response.Push<u32>(0);
+        response.Push<u32>(0xD8); // 216 bytes
         return {};
     }
 
@@ -106,7 +106,7 @@ namespace skyline::service::nfp {
     }
 
     Result IUser::GetApplicationAreaSize(type::KSession &session, ipc::IpcRequest &request, ipc::IpcResponse &response) {
-        response.Push<u32>(0);
+        response.Push<u32>(0xD8); // 216 bytes
         return {};
     }
 
