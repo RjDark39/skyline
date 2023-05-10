@@ -11,6 +11,9 @@ namespace skyline::service::clkrst {
       public:
         IClkrstManager(const DeviceState &state, ServiceManager &manager);
 
+        /**
+         * @url https://switchbrew.org/wiki/PCV_services#OpenSession
+         */
         Result OpenSession(type::KSession &session, ipc::IpcRequest &request, ipc::IpcResponse &response);
 
         SERVICE_DECL(

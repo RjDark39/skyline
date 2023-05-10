@@ -410,6 +410,7 @@ add_library(skyline SHARED
         ${source_DIR}/skyline/services/clkrst/IClkrstManager.cpp
         ${source_DIR}/skyline/services/clkrst/IClkrstSession.cpp
         ${source_DIR}/skyline/services/psm/IPsmServer.cpp
+        ${source_DIR}/skyline/services/psm/IPsmSession.cpp
         )
 target_include_directories(skyline PRIVATE ${source_DIR}/skyline)
 # target_precompile_headers(skyline PRIVATE ${source_DIR}/skyline/common.h) # PCH will currently break Intellisense
