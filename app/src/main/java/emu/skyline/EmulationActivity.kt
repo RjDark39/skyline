@@ -497,12 +497,7 @@ class EmulationActivity : AppCompatActivity(), SurfaceHolder.Callback, View.OnTo
     */
     private fun updateCurrentLayout(newLayoutInfo: WindowLayoutInfo) {
         if (!emulationSettings.enableFoldableLayout) return
-        binding.gameViewContainer.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
-        binding.overlayViewContainer.updatePadding(0, 0, 0, 0)
-        binding.overlayViewContainer.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
-        requestedOrientation = emulationSettings.orientation
-        val foldingFeature = newLayoutInfo.displayFeatures.find { it is FoldingFeature }
-        (foldingFeature as? FoldingFeature)?.let {
+        val isFolding = (newLayoutInfo.displayFeatures.find { it is FoldingFeature } as? FoldingFeature)?.let {
             if (it.isSeparating) {
                 requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                 if (it.orientation == FoldingFeature.Orientation.HORIZONTAL) {
@@ -511,6 +506,13 @@ class EmulationActivity : AppCompatActivity(), SurfaceHolder.Callback, View.OnTo
                     binding.overlayViewContainer.updatePadding(0, 0, 0, 24.toPx)
                 }
             }
+            it.isSeparating
+        } ?: false
+        if (!isFolding) {
+            binding.gameViewContainer.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+            binding.overlayViewContainer.updatePadding(0, 0, 0, 0)
+            binding.overlayViewContainer.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+            requestedOrientation = emulationSettings.orientation
         }
         binding.gameViewContainer.requestLayout()
         binding.overlayViewContainer.requestLayout()
