@@ -17,6 +17,7 @@ import android.content.pm.ActivityInfo
 import android.content.res.AssetManager
 import android.content.res.Configuration
 import android.content.res.Resources
+import android.graphics.Color
 import android.graphics.PointF
 import android.graphics.drawable.Icon
 import android.hardware.display.DisplayManager
@@ -739,6 +740,11 @@ class EmulationActivity : AppCompatActivity(), SurfaceHolder.Callback, View.OnTo
     fun getVersionCode() : Int {
         val (major, minor, patch) = BuildConfig.VERSION_NAME.split('-')[0].split('.').map { it.toUInt() }
         return ((major shl 22) or (minor shl 12) or (patch)).toInt()
+    }
+
+    @Suppress("unused")
+    fun reportCrash() {
+        binding.perfStats.setTextColor(obtainStyledAttributes(intArrayOf(R.color.colorPerfStatsError)).use { it.getColor(0, Color.RED) })
     }
 
     private val insetsOrMarginHandler = View.OnApplyWindowInsetsListener { view, insets ->

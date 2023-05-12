@@ -180,4 +180,8 @@ namespace skyline {
     i32 JvmManager::GetVersionCode() {
         return env->CallIntMethod(instance, getVersionCodeId);
     }
+
+    void JvmManager::reportCrash() {
+        env->CallVoidMethod(instance, reportCrashId);
+    }
 }

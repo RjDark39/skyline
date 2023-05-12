@@ -210,6 +210,11 @@ namespace skyline {
          */
         DhcpInfo GetDhcpInfo();
 
+        /**
+         * @brief A call to EmulationActivity.reportCrash in Kotlin
+         */
+        void reportCrash();
+
       private:
         jmethodID initializeControllersId;
         jmethodID vibrateDeviceId;
@@ -220,6 +225,7 @@ namespace skyline {
         jmethodID closeKeyboardId;
         jmethodID showValidationResultId;
         jmethodID getDhcpInfoId;
+        jmethodID reportCrashId;
         jmethodID getIntegerValueId;
 
         jmethodID showPipelineLoadingScreenId;
