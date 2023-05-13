@@ -15,4 +15,10 @@ namespace skyline::service::bcat {
         manager.RegisterService(SRVREG(IDeliveryCacheStorageService), session, response);
         return {};
     }
+
+    Result IServiceCreator::CreateDeliveryCacheStorageServiceWithApplicationId(type::KSession &session, ipc::IpcRequest &request, ipc::IpcResponse &response) {
+        auto titleId{request.Pop<u64>()};
+        manager.RegisterService(SRVREG(IDeliveryCacheStorageService), session, response);
+        return {};
+    }
 }
