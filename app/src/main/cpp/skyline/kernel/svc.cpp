@@ -119,7 +119,7 @@ namespace skyline::kernel::svc {
 
         // We only check the first found chunk for whatever reason.
         if (!chunk.second.state.attributeChangeAllowed) [[unlikely]] {
-            state.ctx->gpr.w0 = result::InvalidState;
+            state.ctx->gpr.w0 = Result{};
             Logger::Warn("Attribute change not allowed for chunk: 0x{:X}", chunk.first);
             return;
         }
