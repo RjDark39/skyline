@@ -19,9 +19,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.*
-import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.charset.StandardCharsets
+import javax.net.ssl.HttpsURLConnection
 
 class GitHubRequest @JvmOverloads constructor(val url: String, val type: Content, val output: File? = null) {
 
@@ -32,21 +32,33 @@ class GitHubRequest @JvmOverloads constructor(val url: String, val type: Content
         ASSET
     }
 
+    @get:Throws(IOException::class)
+    private val URL.asConnection get() : HttpsURLConnection {
+        return (openConnection() as HttpsURLConnection).apply {
+            requestMethod = "GET"
+            useCaches = false
+            defaultUseCaches = false
+        }
+    }
+
+    private val HttpsURLConnection.withToken get() : HttpsURLConnection {
+        setRequestProperty("Authorization", "Bearer $token")
+        return this
+    }
+
     init {
         CoroutineScope(Dispatchers.IO).launch(Dispatchers.IO) {
             if (type == Content.JSON) {
                 try {
-                    var conn = URL(url).openConnection() as HttpURLConnection
-                    conn.requestMethod = "GET"
-                    conn.useCaches = false
-                    conn.defaultUseCaches = false
-                    conn.setRequestProperty("Authorization", "Bearer $token")
-                    val responseCode = conn.responseCode
-                    if (responseCode == HttpURLConnection.HTTP_MOVED_PERM) {
+                    var conn = URL(url).asConnection.withToken
+                    var responseCode = conn.responseCode
+                    if (responseCode == HttpsURLConnection.HTTP_MOVED_PERM) {
+                        val address = conn.getHeaderField("Location")
                         conn.disconnect()
-                        conn = URL(conn.getHeaderField("Location"))
-                            .openConnection() as HttpURLConnection
-                    } else if (200 != responseCode) {
+                        conn = URL(address).asConnection.withToken
+                        responseCode = conn.responseCode
+                    }
+                    if (responseCode != HttpsURLConnection.HTTP_OK) {
                         conn.disconnect()
                         return@launch
                     }
@@ -67,13 +79,12 @@ class GitHubRequest @JvmOverloads constructor(val url: String, val type: Content
                     e.printStackTrace()
                 }
             } else if (type == Content.ASSET) {
-                val conn = (URL(url).openConnection() as HttpURLConnection)
-                conn.withToken.setRequestProperty("Accept", "application/octet-stream")
-                conn.inputStream.use { stream ->
-                    FileOutputStream(output).use {
-                        stream.copyTo(it)
+                URL(url).asConnection.withToken.run {
+                    setRequestProperty("Accept", "application/octet-stream")
+                    inputStream.use { stream ->
+                        FileOutputStream(output).use { stream.copyTo(it) }
+                        disconnect()
                     }
-                    conn.disconnect()
                 }
                 output?.let { listener.onResults(it.toUri()) }
             }
@@ -99,11 +110,6 @@ class GitHubRequest @JvmOverloads constructor(val url: String, val type: Content
                 i += 2
             }
             return output.toString()
-        }
-
-        private val HttpURLConnection.withToken get() : HttpURLConnection {
-            this.setRequestProperty("Authorization", "token $token")
-            return this
         }
     }
 }
