@@ -41,6 +41,7 @@ import emu.skyline.settings.EmulationSettings
 import emu.skyline.settings.SettingsActivity
 import emu.skyline.update.UpdateManager
 import emu.skyline.utils.GpuDriverHelper
+import emu.skyline.utils.SearchLocationHelper
 import emu.skyline.utils.WindowInsetsHelper
 import javax.inject.Inject
 import kotlin.math.ceil
@@ -270,7 +271,7 @@ class MainActivity : AppCompatActivity() {
             binding.romPlaceholder.isVisible = true
             binding.romPlaceholder.text = getString(R.string.searching_roms)
         }
-        viewModel.loadRoms(this, loadFromFile, Uri.parse(appSettings.searchLocation), EmulationSettings.global.systemLanguage)
+        viewModel.loadRoms(this, loadFromFile, SearchLocationHelper.getSearchLocations(this), EmulationSettings.global.systemLanguage)
         appSettings.refreshRequired = false
     }
 
@@ -342,6 +343,6 @@ class MainActivity : AppCompatActivity() {
             adapter.notifyItemRangeChanged(0, adapter.currentItems.size)
         }
 
-        viewModel.checkRomHash(Uri.parse(appSettings.searchLocation), EmulationSettings.global.systemLanguage)
+        viewModel.checkRomHash(SearchLocationHelper.getSearchLocations(this), EmulationSettings.global.systemLanguage)
     }
 }
