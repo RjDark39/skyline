@@ -51,8 +51,7 @@ class SearchLocationPreference @JvmOverloads constructor(context : Context, attr
         summaryProvider = SummaryProvider<SearchLocationPreference> {
             String.format(
                 context.getString(SkylineR.string.search_locations_count),
-                if(locations.isEmpty()) "No" else locations.size.toString(),
-                if(locations.size > 1) "s" else ""
+                if(locations.isEmpty()) context.getString(SkylineR.string.no) else locations.size.toString()
             )
         }
     }

@@ -48,7 +48,7 @@
     <string name="delete_search_location">Delete this search location</string>
     <string name="add">Add</string>
     <string name="add_search_location">Add a search location</string>
-    <string name="search_locations_count">%1$s search location%2$s selected</string>
+    <string name="search_locations_count">%1$s search location(s) selected</string>
     <string name="search_location_add_success">Search location added successfully</string>
     <string name="search_location_delete_success">Search location deleted successfully</string>
     <string name="search_location_duplicated">Search location already added</string>
