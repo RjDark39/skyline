@@ -22,10 +22,10 @@ namespace skyline::service::nfp {
 
         enum class IUDeviceState : u32 {
             Initialized = 0,
-            Searching = 1,
-            Found = 2,
-            Removed = 3,
-            Mounted = 4,
+            SearchingForTag = 1,
+            TagFound = 2,
+            TagRemoved = 3,
+            TagMounted = 4,
             Unavailable = 5,
             Finalized = 6
         } nfpDeviceState{IUDeviceState::Unavailable};

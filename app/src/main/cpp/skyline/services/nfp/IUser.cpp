@@ -25,18 +25,22 @@ namespace skyline::service::nfp {
     }
 
     Result IUser::StartDetection(type::KSession &session, ipc::IpcRequest &request, ipc::IpcResponse &response) {
+        nfpDeviceState = IUDeviceState::SearchingForTag;
         return {};
     }
 
     Result IUser::StopDetection(type::KSession &session, ipc::IpcRequest &request, ipc::IpcResponse &response) {
+        nfpDeviceState = IUDeviceState::Initialized;
         return {};
     }
 
     Result IUser::Mount(type::KSession &session, ipc::IpcRequest &request, ipc::IpcResponse &response) {
+        nfpDeviceState = IUDeviceState::TagMounted;
         return {};
     }
 
     Result IUser::Unmount(type::KSession &session, ipc::IpcRequest &request, ipc::IpcResponse &response) {
+        nfpDeviceState = IUDeviceState::TagFound;
         return {};
     }
 
@@ -101,7 +105,7 @@ namespace skyline::service::nfp {
 
     Result IUser::GetNpadId(type::KSession &session, ipc::IpcRequest &request, ipc::IpcResponse &response) {
         auto npadHandle{request.Pop<input::NpadDeviceHandle>()};
-        response.Push<u32>(0);
+        response.Push<u32>((u32) state.input->npad[npadHandle.id].id);
         return {};
     }
 
