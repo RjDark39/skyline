@@ -1,16 +1,13 @@
-name: Actions Clean
+name: Android CI
 
 on:
   push:
     branches: [ ftx1 ]
 
-permissions:
-  actions: write
-
 jobs:
   clean:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 2
 
     steps:
     - name: Remove artifacts
