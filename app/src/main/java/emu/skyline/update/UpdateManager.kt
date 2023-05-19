@@ -44,7 +44,8 @@ object UpdateManager {
 
     private val Number.toPx get() = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this.toFloat(), Resources.getSystem().displayMetrics).toInt()
 
-    private const val appName = "skyline"
+    private const val releaseName = "Tagline"
+    private const val projectName = "skyline"
     private var onRequestInstall: ActivityResultLauncher<Intent>? = null
     private var listener : UpdateListener? = null
 
@@ -58,7 +59,7 @@ object UpdateManager {
                         } catch (ignored : Exception) { }
                     }
                 }
-                val apkFile = File(getPublicFilesDir().canonicalPath, "$appName.apk")
+                val apkFile = File(getPublicFilesDir().canonicalPath, "$releaseName.apk")
                 if (apkFile.exists()) apkFile.delete()
             }
         }
@@ -97,7 +98,7 @@ object UpdateManager {
 
     private fun requestDownload(context: Context) {
         CoroutineScope(Dispatchers.IO).launch(Dispatchers.IO) {
-            val apkFile = File(context.getPublicFilesDir().canonicalPath, "$appName.apk")
+            val apkFile = File(context.getPublicFilesDir().canonicalPath, "$releaseName.apk")
             if (apkFile.exists()) apkFile.delete()
             GitHubRequest(downloadUrl!!, GitHubRequest.Content.ASSET, apkFile).setResultListener(object : GitHubRequest.ResultListener {
                 override fun onResults(result : Any) {
@@ -108,12 +109,12 @@ object UpdateManager {
     }
 
     private fun getDownloadOrNull(context: Context, manual: Boolean) {
-        GitHubRequest("https://api.github.com/repos/8bitDream/$appName/releases/tags/8bit/ftx1", GitHubRequest.Content.JSON).setResultListener(object : GitHubRequest.ResultListener {
+        GitHubRequest("https://api.github.com/repos/8bitDream/$projectName/releases/tags/8bit/ftx1", GitHubRequest.Content.JSON).setResultListener(object : GitHubRequest.ResultListener {
             override fun onResults(result : Any) {
                 CoroutineScope(Dispatchers.IO).launch(Dispatchers.IO) {
                     try {
                         val jsonObject = JSONTokener(result as String).nextValue() as JSONObject
-                        val lastCommit = (jsonObject["name"] as String).substring(appName.length + 1)
+                        val lastCommit = (jsonObject["name"] as String).substring(projectName.length + 1)
                         if (!BuildConfig.GIT_HASH.startsWith(lastCommit)) {
                             val assets = jsonObject["assets"] as JSONArray
                             val asset = assets[0] as JSONObject

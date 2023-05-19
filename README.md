@@ -39,7 +39,7 @@ A few noteworthy teams/projects who've helped us along the way are:
 ---
 
 ### Disclaimer
-* **Nintendo Switch** is a trademark of **Nintendo Co., Ltd**
-* **Android** is a trademark of **Google LLC**
+* **Nintendo Switch™** is a trademark of **Nintendo Co., Ltd**
+* **Android™** is a trademark of **Google LLC**
 ###
 *Skyline is not affiliated, associated, authorized, endorsed by, or in any way connected with Nintendo. No licensed resources are included. Files created with or resulting from this project are not intended for sale or distribution. This project is for educational and archival purposes only.*
